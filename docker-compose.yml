@@ -1,0 +1,15 @@
+services:
+  audio-oracle:
+    image: ${DOCKER_REGISTRY-}audio-oracle
+    container_name: audio-oracle
+    user: 0:0
+    build:
+      context: .
+      dockerfile: Sellorio.AudioOracle.Web/Sellorio.AudioOracle.Web/Dockerfile
+    ports:
+      - "27572:80"
+    volumes:
+      - "data:/data"
+
+volumes:
+  data: 

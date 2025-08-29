@@ -1,0 +1,78 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36401.2
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Web", "Sellorio.AudioOracle.Web\Sellorio.AudioOracle.Web\Sellorio.AudioOracle.Web.csproj", "{D7045B78-E4DB-4E36-8283-267AB448A1FD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Web.Client", "Sellorio.AudioOracle.Web\Sellorio.AudioOracle.Web.Client\Sellorio.AudioOracle.Web.Client.csproj", "{3AA30C13-1C89-41B3-98AC-A0AF2B9B86BF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Data", "Sellorio.AudioOracle.Data\Sellorio.AudioOracle.Data.csproj", "{19CCECC8-6834-4558-9D33-8820CAED36C6}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Services", "Sellorio.AudioOracle.Services\Sellorio.AudioOracle.Services.csproj", "{3C3AB16E-C48F-4689-A903-5A8208A06D3B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Models", "Sellorio.AudioOracle.Models\Sellorio.AudioOracle.Models.csproj", "{68D661C7-5599-4410-987D-B6A272668234}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Library", "Sellorio.AudioOracle.Library\Sellorio.AudioOracle.Library.csproj", "{4BD31DE0-249A-4141-AA22-B8DD478EEE72}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
+	ProjectSection(SolutionItems) = preProject
+		.gitignore = .gitignore
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Client", "Sellorio.AudioOracle.Client\Sellorio.AudioOracle.Client.csproj", "{5AE7A781-5CCD-44EB-A0B1-05C06ED73C67}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.ServiceInterfaces", "Sellorio.AudioOracle.ServiceInterfaces\Sellorio.AudioOracle.ServiceInterfaces.csproj", "{ED26EE92-7CD6-4C59-B4E7-2ACAC82E10C9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D7045B78-E4DB-4E36-8283-267AB448A1FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7045B78-E4DB-4E36-8283-267AB448A1FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7045B78-E4DB-4E36-8283-267AB448A1FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7045B78-E4DB-4E36-8283-267AB448A1FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3AA30C13-1C89-41B3-98AC-A0AF2B9B86BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3AA30C13-1C89-41B3-98AC-A0AF2B9B86BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3AA30C13-1C89-41B3-98AC-A0AF2B9B86BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3AA30C13-1C89-41B3-98AC-A0AF2B9B86BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19CCECC8-6834-4558-9D33-8820CAED36C6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19CCECC8-6834-4558-9D33-8820CAED36C6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19CCECC8-6834-4558-9D33-8820CAED36C6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19CCECC8-6834-4558-9D33-8820CAED36C6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3C3AB16E-C48F-4689-A903-5A8208A06D3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3C3AB16E-C48F-4689-A903-5A8208A06D3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3C3AB16E-C48F-4689-A903-5A8208A06D3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3C3AB16E-C48F-4689-A903-5A8208A06D3B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{68D661C7-5599-4410-987D-B6A272668234}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{68D661C7-5599-4410-987D-B6A272668234}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{68D661C7-5599-4410-987D-B6A272668234}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{68D661C7-5599-4410-987D-B6A272668234}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BD31DE0-249A-4141-AA22-B8DD478EEE72}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BD31DE0-249A-4141-AA22-B8DD478EEE72}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BD31DE0-249A-4141-AA22-B8DD478EEE72}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BD31DE0-249A-4141-AA22-B8DD478EEE72}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AE7A781-5CCD-44EB-A0B1-05C06ED73C67}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AE7A781-5CCD-44EB-A0B1-05C06ED73C67}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AE7A781-5CCD-44EB-A0B1-05C06ED73C67}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AE7A781-5CCD-44EB-A0B1-05C06ED73C67}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ED26EE92-7CD6-4C59-B4E7-2ACAC82E10C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ED26EE92-7CD6-4C59-B4E7-2ACAC82E10C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ED26EE92-7CD6-4C59-B4E7-2ACAC82E10C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ED26EE92-7CD6-4C59-B4E7-2ACAC82E10C9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2CDB718A-9E87-4B80-8CE4-DA48DF239CED}
+	EndGlobalSection
+EndGlobal
