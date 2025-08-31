@@ -8,3 +8,6 @@ dotnet_diagnostic.IDE0161.severity = warning
 
 # IDE0305: Simplify collection initialization
 dotnet_style_prefer_collection_expression = when_types_exactly_match
+
+# IDE0079: Remove unnecessary suppression
+dotnet_diagnostic.IDE0079.severity = none

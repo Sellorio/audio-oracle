@@ -30,6 +30,11 @@ public class ValueResult<TValue> : IResult
 
     public static ValueResult<TValue> Success(TValue value, params ResultMessage[] messages)
     {
+        return Success(value, (IEnumerable<ResultMessage>)messages);
+    }
+
+    public static ValueResult<TValue> Success(TValue value, IEnumerable<ResultMessage> messages)
+    {
         messages ??= [];
 
         if (messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error))
@@ -38,6 +43,11 @@ public class ValueResult<TValue> : IResult
         }
 
         return new ValueResult<TValue>(messages.ToImmutableArray(), value);
+    }
+
+    public static ValueResult<TValue> Failure(params ResultMessage[] messages)
+    {
+        return Failure((IList<ResultMessage>)messages);
     }
 
     public static ValueResult<TValue> Failure(IEnumerable<ResultMessage> messages)
@@ -52,11 +62,6 @@ public class ValueResult<TValue> : IResult
         }
 
         return new ValueResult<TValue>(asImmutableArray, default);
-    }
-
-    public static ValueResult<TValue> Failure(params ResultMessage[] messages)
-    {
-        return Failure((IList<ResultMessage>)messages);
     }
 
     public static ValueResult<TValue> operator |(ValueResult<TValue> left, Result right)

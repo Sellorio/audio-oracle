@@ -13,7 +13,7 @@ public class TrackData
     public AlbumData Album { get; set; }
 
     [Required]
-    public Source? MetadataSource { get; set; }
+    public string MetadataSource { get; set; }
 
     [Required, StringLength(Models.Metadata.Album.SourceUrlIdMaxLength)]
     public string MetadataSourceUrlId { get; set; }
@@ -21,13 +21,12 @@ public class TrackData
     [Required, StringLength(Models.Metadata.Album.SourceIdMaxLength)]
     public string MetadataSourceId { get; set; }
 
-    [Required]
-    public Source? DownloadSource { get; set; }
+    public string DownloadSource { get; set; }
 
-    [Required, StringLength(Models.Metadata.Album.SourceUrlIdMaxLength)]
+    [StringLength(Models.Metadata.Album.SourceUrlIdMaxLength)]
     public string DownloadSourceUrlId { get; set; }
 
-    [Required, StringLength(Models.Metadata.Album.SourceIdMaxLength)]
+    [StringLength(Models.Metadata.Album.SourceIdMaxLength)]
     public string DownloadSourceId { get; set; }
 
     [StringLength(Models.Metadata.Album.TitleMaxLength)]
@@ -37,9 +36,6 @@ public class TrackData
     public string AlternateTitle { get; set; }
 
     public int? TrackNumber { get; set; }
-
-    [StringLength(300)]
-    public string FilenameHint { get; set; }
 
     [Required]
     public bool? IsRequested { get; set; }
