@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using AutoMapper;
 
 namespace Sellorio.AudioOracle.Library.Mapping
@@ -9,14 +8,14 @@ namespace Sellorio.AudioOracle.Library.Mapping
     public class MapMethodConfiguration<TMapper>
     {
         private readonly IMapperConfigurationExpression _configure;
-        private readonly List<(Type From, Type To)> _registeredMappers = new();
+        private readonly List<(Type From, Type To)> _registeredMappers = [];
 
         internal MapMethodConfiguration(IMapperConfigurationExpression configure)
         {
             _configure = configure;
         }
 
-        public MapMethodConfiguration<TMapper> AddWithConfig<TFrom, TTo>(Expression<Func<TFrom, TTo>> mapMethod, Action<IMappingExpression<TFrom, TTo>> configure)
+        public MapMethodConfiguration<TMapper> AddWithConfig<TFrom, TTo>(Action<IMappingExpression<TFrom, TTo>> configure)
         {
             var map = _configure.CreateMap<TFrom, TTo>();
             _registeredMappers.Add((typeof(TFrom), typeof(TTo)));
