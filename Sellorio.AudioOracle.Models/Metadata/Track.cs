@@ -8,6 +8,7 @@ public class Track
     public int AlbumId { get; set; }
     public bool IsRequested { get; set; }
     public TrackStatus Status { get; set; }
+    public string StatusText { get; set; }
     public string Filename { get; set; }
 
     public string Title { get; set; }

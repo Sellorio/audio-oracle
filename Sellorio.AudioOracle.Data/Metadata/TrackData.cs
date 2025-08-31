@@ -45,6 +45,8 @@ public class TrackData
     [Required]
     public TrackStatus? Status { get; set; }
 
+    public string StatusText { get; set; }
+
     [StringLength(1000)]
     public string Filename { get; set; }
 }
