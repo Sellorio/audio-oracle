@@ -21,7 +21,7 @@ internal class SearchService(ILogger<SearchService> logger, IEnumerable<ISearchP
         {
             try
             {
-                var searchResultsResult = await searchProvider.SearchAsync(searchText, 1, 20);
+                var searchResultsResult = await searchProvider.SearchAsync(searchText, pageSize: 20);
                 result.AddRange(searchResultsResult.Value.Items);
             }
             catch (Exception ex)

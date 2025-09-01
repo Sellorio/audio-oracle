@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sellorio.AudioOracle.Providers.MusicBrainz;
 using Sellorio.AudioOracle.Providers.SoundCloud;
 using Sellorio.AudioOracle.Providers.YouTube;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
@@ -16,6 +17,7 @@ public static class ServiceCollectionExtensions
         return services
             .AddYouTubeProvider()
             .AddSoundCloudProvider()
+            .AddMusicBrainzProvider()
 
             .AddScoped<SessionState>()
 

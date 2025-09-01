@@ -17,8 +17,18 @@ public class ArtistData
     [Required, StringLength(Album.SourceIdMaxLength)]
     public string SourceId { get; set; }
 
-    [Required, StringLength(Artist.NameMaxLength)]
+    public ArtistType? Type { get; set; }
+
+    [StringLength(Artist.NameMaxLength)]
     public string Name { get; set; }
+
+    public ArtistGender? Gender { get; set; }
+
+    [StringLength(5)]
+    public string CountryCode { get; set; }
+
+    [StringLength(150)]
+    public string Country { get; set; }
 
     public IList<ArtistNameData> ArtistNames { get; set; }
 }

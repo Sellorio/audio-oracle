@@ -1,4 +1,5 @@
 ﻿using Sellorio.AudioOracle.Models.Metadata;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -34,6 +35,8 @@ public class TrackData
 
     [StringLength(Models.Metadata.Album.TitleMaxLength)]
     public string AlternateTitle { get; set; }
+
+    public TimeSpan? Duration { get; set; }
 
     public int? TrackNumber { get; set; }
 

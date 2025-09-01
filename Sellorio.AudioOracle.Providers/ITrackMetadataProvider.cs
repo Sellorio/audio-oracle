@@ -7,5 +7,5 @@ namespace Sellorio.AudioOracle.Providers;
 public interface ITrackMetadataProvider : IProvider
 {
     Task<ValueResult<ResolvedIds>> ResolveTrackIdsAsync(string sourceUrlId);
-    Task<ValueResult<TrackMetadata>> GetTrackMetadataAsync(ResolvedIds resolvedIds);
+    Task<ValueResult<TrackMetadata>> GetTrackMetadataAsync(ResolvedIds albumIds, ResolvedIds trackIds);
 }

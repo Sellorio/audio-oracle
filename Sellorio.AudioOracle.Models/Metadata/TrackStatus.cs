@@ -5,6 +5,7 @@ public enum TrackStatus
     MissingMetadata,
     MetadataRetrievalFailed,
     NotRequested,
+    MissingDownloadSource,
     Downloading,
     DownloadFailed,
     Imported,

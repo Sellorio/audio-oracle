@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Sellorio.AudioOracle.Models.Metadata;
 
@@ -13,6 +14,7 @@ public class Track
 
     public string Title { get; set; }
     public string AlternateTitle { get; set; }
+    public TimeSpan? Duration { get; set; }
     public int? TrackNumber { get; set; }
     public IList<Artist> Artists { get; set; }
 }

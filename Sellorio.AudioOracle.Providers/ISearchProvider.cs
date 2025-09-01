@@ -6,5 +6,5 @@ namespace Sellorio.AudioOracle.Providers;
 
 public interface ISearchProvider : IProvider
 {
-    Task<ValueResult<PagedListWithCount<SearchResult>>> SearchAsync(string searchText, int page, int pageSize);
+    Task<ValueResult<PagedList<SearchResult>>> SearchAsync(string searchText, int pageSize);
 }

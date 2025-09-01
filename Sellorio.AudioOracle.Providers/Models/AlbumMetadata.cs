@@ -11,4 +11,5 @@ public class AlbumMetadata
     public ushort? ReleaseYear { get; set; }
     public ushort TrackCount { get; set; }
     public IList<string> ArtistSourceIds { get; set; }
+    public IList<AlbumTrackMetadata> Tracks { get; set; }
 }
