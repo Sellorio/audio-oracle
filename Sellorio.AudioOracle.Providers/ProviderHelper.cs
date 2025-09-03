@@ -30,4 +30,18 @@ internal static class ProviderHelper
 
         return lazyTask.Value;
     }
+
+    public static Task<TResult> GetWithCacheAsync<TKey, TResult>(MemoryCache cache, TimeSpan cacheDuration, TKey key, Func<TKey, Task<TResult>> getter)
+    {
+        var lazyTask = cache.GetOrCreate(key, (entry) =>
+        {
+            entry.AbsoluteExpirationRelativeToNow = cacheDuration;
+
+            return
+                new Lazy<Task<TResult>>(() => getter?.Invoke(key),
+                isThreadSafe: true);
+        });
+
+        return lazyTask.Value;
+    }
 }
