@@ -12,9 +12,11 @@ public class NameComparer : IEqualityComparer<string>
     {
     }
 
-    public bool Equals(string x, string y)
+    public bool Equals(string? x, string? y)
     {
-        return ToSearchNormalisedName(x).Equals(ToSearchNormalisedName(y));
+        return
+            x == null && y == null ||
+            x != null && y != null && ToSearchNormalisedName(x).Equals(ToSearchNormalisedName(y));
     }
 
     public int GetHashCode([DisallowNull] string obj)

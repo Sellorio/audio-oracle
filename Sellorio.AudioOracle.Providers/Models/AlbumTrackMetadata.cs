@@ -2,6 +2,6 @@
 
 public class AlbumTrackMetadata
 {
-    public ResolvedIds Ids { get; set; }
-    public string Title { get; set; }
+    public required ResolvedIds Ids { get; init; }
+    public required string Title { get; init; }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Sellorio.AudioOracle.Library.Comparers;
+using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.Providers.MusicBrainz.Dtos;
@@ -18,9 +19,11 @@ internal class ArtistMetadataProvider(HttpClient httpClient) : IArtistMetadataPr
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
 
-    public async Task<IList<ArtistMetadata>> GetArtistMetadataAsync(string[] ids)
+    public string ProviderName => Constants.ProviderName;
+
+    public async Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(string[] ids)
     {
-        var result = new List<ArtistMetadata>(ids.Length);
+        var result = new List<ArtistMetadata?>(ids.Length);
 
         foreach (var id in ids)
         {
@@ -59,7 +62,7 @@ internal class ArtistMetadataProvider(HttpClient httpClient) : IArtistMetadataPr
         return result;
     }
 
-    private async Task<ArtistDto> GetArtistAsync(Guid id)
+    private async Task<ArtistDto?> GetArtistAsync(Guid id)
     {
         var responseMessage = await httpClient.GetAsync($"artist/{id}?fmt=json&inc=aliases");
 

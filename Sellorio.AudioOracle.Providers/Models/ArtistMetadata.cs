@@ -5,10 +5,10 @@ namespace Sellorio.AudioOracle.Providers.Models;
 
 public class ArtistMetadata
 {
-    public string Name { get; set; }
-    public ArtistType Type { get; set; }
-    public ArtistGender? Gender { get; set; }
-    public string CountryCode { get; set; }
-    public string Country { get; set; }
-    public IList<string> Aliases { get; set; }
+    public required string Name { get; init; }
+    public required ArtistType Type { get; init; }
+    public required ArtistGender? Gender { get; init; }
+    public required string? CountryCode { get; init; }
+    public required string? Country { get; init; }
+    public required IList<string> Aliases { get; init; }
 }

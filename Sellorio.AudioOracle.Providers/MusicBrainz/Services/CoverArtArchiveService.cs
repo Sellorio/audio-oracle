@@ -13,7 +13,7 @@ internal class CoverArtArchiveService(HttpClient httpClient) : ICoverArtArchiveS
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
 
-    public async Task<string> GetReleaseArtUrlAsync(Guid musicBrainzReleaseId)
+    public async Task<string?> GetReleaseArtUrlAsync(Guid musicBrainzReleaseId)
     {
         return
             await ProviderHelper.GetWithCacheAndRateLimitAsync(
@@ -24,7 +24,7 @@ internal class CoverArtArchiveService(HttpClient httpClient) : ICoverArtArchiveS
                 GetReleaseArtUrlWithoutCacheAsync);
     }
 
-    private async Task<string> GetReleaseArtUrlWithoutCacheAsync(Guid musicBrainzReleaseId)
+    private async Task<string?> GetReleaseArtUrlWithoutCacheAsync(Guid musicBrainzReleaseId)
     {
         var response = await httpClient.GetAsync($"release/{musicBrainzReleaseId}");
 
@@ -36,7 +36,7 @@ internal class CoverArtArchiveService(HttpClient httpClient) : ICoverArtArchiveS
         response.EnsureSuccessStatusCode();
 
         var dto = await response.Content.ReadFromJsonAsync<ReleaseArtDto>();
-        var thumbnails = dto.Images?.FirstOrDefault(x => x.Front)?.Thumbnails;
+        var thumbnails = dto!.Images?.FirstOrDefault(x => x.Front)?.Thumbnails;
 
         if (thumbnails == null)
         {

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
 namespace Sellorio.AudioOracle.Data.Sessions;
@@ -9,12 +8,7 @@ public class SessionData
 {
     public int Id { get; set; }
 
-    [Required]
-    public Guid? Guid { get; set; }
-
-    [Required]
-    public DateTimeOffset? CreatedAt { get; set; }
-
-    [Required]
-    public DateTimeOffset? LastAccessedAt { get; set; }
+    public required Guid Guid { get; set; }
+    public required DateTimeOffset CreatedAt { get; set; }
+    public required DateTimeOffset LastAccessedAt { get; set; }
 }

@@ -23,7 +23,7 @@ public static class ExtensionsForValidationBuilder
 
         foreach (var property in properties)
         {
-            object value = null;
+            object? value = null;
             bool? hasValue = null;
 
             var attributes = property.GetCustomAttributes(true);
@@ -149,7 +149,7 @@ public static class ExtensionsForValidationBuilder
         return validationBuilder;
     }
 
-    private static void EnsureValueAndHasValue(ref bool? hasValue, ref object value, Func<object> getter)
+    private static void EnsureValueAndHasValue(ref bool? hasValue, ref object? value, Func<object?> getter)
     {
         if (hasValue == null)
         {

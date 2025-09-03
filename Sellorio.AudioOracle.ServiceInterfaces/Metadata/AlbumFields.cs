@@ -1,12 +1,11 @@
 ﻿using System;
 
-namespace Sellorio.AudioOracle.ServiceInterfaces.Metadata
+namespace Sellorio.AudioOracle.ServiceInterfaces.Metadata;
+
+[Flags]
+public enum AlbumFields
 {
-    [Flags]
-    public enum AlbumFields
-    {
-        None = 0,
-        Tracks = 1,
-        Artists = 2
-    }
+    None = 0,
+    Tracks = 1,
+    Artists = 2
 }

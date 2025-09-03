@@ -6,7 +6,7 @@ internal static class ProviderConstants
 
     static ProviderConstants()
     {
-        var assemblyVersion = typeof(ProviderConstants).Assembly.GetName().Version;
+        var assemblyVersion = typeof(ProviderConstants).Assembly.GetName().Version!;
         UserAgent = $"sellorio-audio-oracle/{assemblyVersion.Major}.{assemblyVersion.Minor}";
     }
 }

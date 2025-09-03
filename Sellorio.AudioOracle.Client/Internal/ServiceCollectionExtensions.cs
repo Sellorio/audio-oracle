@@ -8,14 +8,14 @@ namespace Sellorio.AudioOracle.Client.Internal;
 
 internal static class ServiceCollectionExtensions
 {
-    public static IHttpClientBuilder TryAddRestClient<TInterface, TImplementation>(this IServiceCollection services)
+    public static IHttpClientBuilder? TryAddRestClient<TInterface, TImplementation>(this IServiceCollection services)
         where TImplementation : TInterface
         where TInterface : class
     {
-        return TryAddRestClient<TInterface, TImplementation>(services, (Action<HttpClient>)null);
+        return TryAddRestClient<TInterface, TImplementation>(services, (Action<HttpClient>?)null);
     }
 
-    public static IHttpClientBuilder TryAddRestClient<TInterface, TImplementation>(this IServiceCollection services, Action<HttpClient> configureClient)
+    public static IHttpClientBuilder? TryAddRestClient<TInterface, TImplementation>(this IServiceCollection services, Action<HttpClient>? configureClient)
         where TImplementation : TInterface
         where TInterface : class
     {

@@ -1,10 +1,11 @@
-﻿using Sellorio.AudioOracle.Providers.Models;
+﻿using Sellorio.AudioOracle.Library.Results;
+using Sellorio.AudioOracle.Providers.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Providers;
 
-public interface IArtistMetadataProvider
+public interface IArtistMetadataProvider : IProvider
 {
-    Task<IList<ArtistMetadata>> GetArtistMetadataAsync(string[] ids);
+    Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(string[] ids);
 }

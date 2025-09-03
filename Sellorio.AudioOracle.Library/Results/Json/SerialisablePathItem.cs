@@ -7,8 +7,8 @@ namespace Sellorio.AudioOracle.Library.Results.Json;
 internal class SerialisablePathItem
 {
     [JsonPropertyName("v")]
-    public JsonElement Value { get; set; }
+    public required JsonElement Value { get; init; }
 
     [JsonPropertyName("t")]
-    public ResultMessagePathItemType Type { get; set; }
+    public required ResultMessagePathItemType Type { get; init; }
 }

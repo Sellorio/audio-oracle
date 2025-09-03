@@ -2,6 +2,6 @@
 
 public class ResolvedIds
 {
-    public string SourceId { get; set; }
-    public string SourceUrlId { get; set; }
+    public required string SourceId { get; init; }
+    public required string SourceUrlId { get; init; }
 }

@@ -18,7 +18,7 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
 
-    public string SourceName => Constants.ProviderName;
+    public string ProviderName => Constants.ProviderName;
 
     public async Task<ValueResult<AlbumMetadata>> GetAlbumMetadataAsync(ResolvedIds resolvedIds)
     {
@@ -33,24 +33,24 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
         return new AlbumMetadata
         {
             AlbumArtUrl = await coverArtArchiveService.GetReleaseArtUrlAsync(Guid.Parse(resolvedIds.SourceUrlId)),
-            ArtistSourceIds = release.ArtistCredit.Select(x => x.Artist.Id.ToString()).ToArray(),
+            ArtistIds = release!.ArtistCredit.Select(x => x.Artist.Id.ToString()).Select(x => new ResolvedIds { SourceId = x, SourceUrlId = x }).ToArray(),
             ReleaseDate = release.Date,
             ReleaseYear = (ushort?)release.ReleaseYear,
             Title = release.Title,
             TrackCount = (ushort)release.TrackCount,
             Tracks =
                 release.Media
-                    .SelectMany(x => x.Tracks)
+                    .SelectMany(x => x.Tracks!)
                     .Select(x => new AlbumTrackMetadata
                     {
-                        Ids = new() { SourceId = x.Recording.Id.ToString(), SourceUrlId = x.Recording.Id.ToString() },
+                        Ids = new() { SourceId = x.Id.ToString(), SourceUrlId = x.Id.ToString() },
                         Title = x.Title
                     })
                     .ToArray()
         };
     }
 
-    public async Task<Release> GetMusicBrainzReleaseAsync(Guid id)
+    public async Task<ReleaseDto?> GetMusicBrainzReleaseAsync(Guid id)
     {
         return
             await ProviderHelper.GetWithCacheAndRateLimitAsync(
@@ -70,7 +70,7 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
         }));
     }
 
-    private async Task<Release> GetReleaseAsync(Guid id)
+    private async Task<ReleaseDto?> GetReleaseAsync(Guid id)
     {
         var responseMessage = await httpClient.GetAsync($"release/{id}?fmt=json&inc=artists+media+recordings");
 
@@ -82,7 +82,7 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
         responseMessage.EnsureSuccessStatusCode();
 
         var json = await responseMessage.Content.ReadAsStringAsync();
-        var release = JsonSerializer.Deserialize<Release>(json, Constants.JsonOptions);
+        var release = JsonSerializer.Deserialize<ReleaseDto>(json, Constants.JsonOptions)!;
 
         var trackOffset = 0;
 
@@ -90,7 +90,7 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
         {
             medium.TrackOffset = trackOffset;
 
-            foreach (var track in medium.Tracks)
+            foreach (var track in medium.Tracks!)
             {
                 track.Number = (int.Parse(track.Number) + trackOffset).ToString();
             }

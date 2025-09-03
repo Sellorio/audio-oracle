@@ -4,7 +4,7 @@ namespace Sellorio.AudioOracle.Library.Results;
 
 public class PagedList<TItem>
 {
-    public int Page { get; set; }
-    public int PageSize { get; set; }
-    public List<TItem> Items { get; set; }
+    public required int Page { get; init; }
+    public required int PageSize { get; init; }
+    public required List<TItem> Items { get; init; }
 }

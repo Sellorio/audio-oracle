@@ -5,11 +5,11 @@ namespace Sellorio.AudioOracle.Providers.Models;
 
 public class AlbumMetadata
 {
-    public string AlbumArtUrl { get; set; }
-    public string Title { get; set; }
-    public DateOnly? ReleaseDate { get; set; }
-    public ushort? ReleaseYear { get; set; }
-    public ushort TrackCount { get; set; }
-    public IList<string> ArtistSourceIds { get; set; }
-    public IList<AlbumTrackMetadata> Tracks { get; set; }
+    public required string? AlbumArtUrl { get; init; }
+    public required string Title { get; init; }
+    public required DateOnly? ReleaseDate { get; init; }
+    public required ushort? ReleaseYear { get; init; }
+    public required ushort TrackCount { get; init; }
+    public required IList<ResolvedIds> ArtistIds { get; init; }
+    public required IList<AlbumTrackMetadata> Tracks { get; init; }
 }

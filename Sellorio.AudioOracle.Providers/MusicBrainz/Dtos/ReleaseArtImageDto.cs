@@ -4,13 +4,13 @@ namespace Sellorio.AudioOracle.Providers.MusicBrainz.Dtos;
 
 internal class ReleaseArtImageDto
 {
-    public bool Approved { get; set; }
-    public bool Back { get; set; }
-    public string Comment { get; set; }
-    public long Edit { get; set; }
-    public bool Front { get; set; }
-    public long Id { get; set; }
-    public string Image { get; set; }
-    public Dictionary<string, string> Thumbnails { get; set; }
-    public IList<string> Types { get; set; }
+    public required bool Approved { get; init; }
+    public required bool Back { get; init; }
+    public required string Comment { get; init; }
+    public required long Edit { get; init; }
+    public required bool Front { get; init; }
+    public required long Id { get; init; }
+    public required string Image { get; init; }
+    public required Dictionary<string, string> Thumbnails { get; init; }
+    public required IList<string> Types { get; init; }
 }

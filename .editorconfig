@@ -7,7 +7,7 @@ csharp_style_namespace_declarations = file_scoped
 dotnet_diagnostic.IDE0161.severity = warning
 
 # IDE0305: Simplify collection initialization
-dotnet_style_prefer_collection_expression = when_types_exactly_match
+dotnet_style_prefer_collection_expression = never
 
 # IDE0079: Remove unnecessary suppression
 dotnet_diagnostic.IDE0079.severity = none

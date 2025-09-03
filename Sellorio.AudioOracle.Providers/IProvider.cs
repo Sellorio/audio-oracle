@@ -2,5 +2,5 @@
 
 public interface IProvider
 {
-    string SourceName { get; }
+    string ProviderName { get; }
 }

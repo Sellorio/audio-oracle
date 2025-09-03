@@ -6,17 +6,18 @@ namespace Sellorio.AudioOracle.Models.Metadata;
 
 public class Album
 {
+    public const int SourceMaxLength = 100;
     public const int SourceUrlIdMaxLength = 400;
     public const int SourceIdMaxLength = 50;
     public const int TitleMaxLength = 300;
 
-    public int Id { get; set; }
-    public FileInfo AlbumArt { get; set; }
-    public IList<Track> Tracks { get; set; }
+    public required int Id { get; init; }
+    public required FileInfo AlbumArt { get; init; }
+    public required IList<Track> Tracks { get; init; }
 
-    public string Title { get; set; }
-    public DateOnly? ReleaseDate { get; set; }
-    public ushort? ReleaseYear { get; set; }
-    public ushort TrackCount { get; set; }
-    public IList<Artist> Artists { get; set; }
+    public required string Title { get; init; }
+    public required DateOnly? ReleaseDate { get; init; }
+    public required ushort? ReleaseYear { get; init; }
+    public required ushort TrackCount { get; init; }
+    public required IList<Artist> Artists { get; init; }
 }

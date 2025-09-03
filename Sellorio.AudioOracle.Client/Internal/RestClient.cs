@@ -61,7 +61,7 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
         return ExecuteRequest(url, HttpMethod.Delete);
     }
 
-    private async Task<HttpResponseMessage> ExecuteRequest(FormattableString url, HttpMethod method, object body = null)
+    private async Task<HttpResponseMessage> ExecuteRequest(FormattableString url, HttpMethod method, object? body = null)
     {
         var uri = ParseUri(url);
         using var request = new HttpRequestMessage(method, uri);
@@ -89,7 +89,7 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
         return new Uri(uriString, UriKind.Relative);
     }
 
-    private static string UriSerialize(object value, bool allowObjects)
+    private static string? UriSerialize(object? value, bool allowObjects)
     {
         switch (value)
         {
@@ -119,7 +119,7 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
         }
 
         var type = value.GetType();
-        var queryString = new Dictionary<string, string>();
+        var queryString = new Dictionary<string, string?>();
 
         foreach (var property in type.GetProperties())
         {

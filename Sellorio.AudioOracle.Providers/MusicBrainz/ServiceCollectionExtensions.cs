@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using Microsoft.Extensions.DependencyInjection;
+using Sellorio.AudioOracle.Library.DependencyInjection;
 using Sellorio.AudioOracle.Providers.MusicBrainz.Services;
-using System;
 
 namespace Sellorio.AudioOracle.Providers.MusicBrainz;
 
@@ -14,7 +15,7 @@ public static class ServiceCollectionExtensions
                 o.BaseAddress = new Uri("https://musicbrainz.org/ws/2/");
                 o.DefaultRequestHeaders.UserAgent.ParseAdd(ProviderConstants.UserAgent);
             })
-            .AddTypedClient<ISearchProvider, SearchProvider>()
+            .AddTypedClient<IMetadataSearchProvider, SearchProvider>()
             .AddTypedClient<IAlbumMetadataProvider, AlbumMetadataProvider>()
             .AddTypedClient<IMusicBrainzAlbumMetadataProvider, AlbumMetadataProvider>()
             .AddTypedClient<ITrackMetadataProvider, TrackMetadataProvider>()
@@ -27,6 +28,11 @@ public static class ServiceCollectionExtensions
                 o.DefaultRequestHeaders.UserAgent.ParseAdd(ProviderConstants.UserAgent);
             })
             .AddTypedClient<ICoverArtArchiveService, CoverArtArchiveService>();
+
+        ServiceRegistrationHelper.EnsureAllServicesAreRegistered(
+            services,
+            [typeof(ServiceCollectionExtensions).Assembly],
+            namespacesToInclude: [nameof(MusicBrainz)]);
 
         return services;
     }

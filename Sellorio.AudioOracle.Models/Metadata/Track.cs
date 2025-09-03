@@ -5,16 +5,16 @@ namespace Sellorio.AudioOracle.Models.Metadata;
 
 public class Track
 {
-    public int Id { get; set; }
-    public int AlbumId { get; set; }
-    public bool IsRequested { get; set; }
-    public TrackStatus Status { get; set; }
-    public string StatusText { get; set; }
-    public string Filename { get; set; }
+    public required int Id { get; init; }
+    public required int AlbumId { get; init; }
+    public required bool IsRequested { get; init; }
+    public required TrackStatus Status { get; init; }
+    public required string StatusText { get; init; }
+    public required string Filename { get; init; }
 
-    public string Title { get; set; }
-    public string AlternateTitle { get; set; }
-    public TimeSpan? Duration { get; set; }
-    public int? TrackNumber { get; set; }
-    public IList<Artist> Artists { get; set; }
+    public required string Title { get; init; }
+    public required string AlternateTitle { get; init; }
+    public required TimeSpan? Duration { get; init; }
+    public required int? TrackNumber { get; init; }
+    public required IList<Artist> Artists { get; init; }
 }

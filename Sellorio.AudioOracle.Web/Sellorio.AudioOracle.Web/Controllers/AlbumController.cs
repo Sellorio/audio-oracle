@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Sellorio.AudioOracle.Models.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using System.Threading.Tasks;
 
@@ -7,8 +8,14 @@ namespace Sellorio.AudioOracle.Web.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/albums")]
-public class AlbumController(IAlbumService albumService) : ControllerBase
+public class AlbumController(IAlbumService albumService, IAlbumCreationService albumCreationService) : ControllerBase
 {
+    [HttpPost("from-search")]
+    public async Task<IActionResult> PostFromSearchAsync(SearchResult searchResult)
+    {
+        return await albumCreationService.CreateAlbumFromSearchResultAsync(searchResult).ToActionResult();
+    }
+
     [HttpGet]
     public async Task<IActionResult> ListAsync(AlbumFields include = AlbumFields.None)
     {

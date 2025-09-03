@@ -4,6 +4,6 @@ namespace Sellorio.AudioOracle.Providers.MusicBrainz.Dtos;
 
 internal class ReleaseArtDto
 {
-    public string Release { get; set; }
-    public IList<ReleaseArtImageDto> Images { get; set; }
+    public required string Release { get; init; }
+    public required IList<ReleaseArtImageDto> Images { get; init; }
 }

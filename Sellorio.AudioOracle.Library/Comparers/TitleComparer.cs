@@ -11,19 +11,21 @@ public partial class TitleComparer : IEqualityComparer<string>
     {
     }
 
-    public bool Equals(string x, string y)
+    public bool Equals(string? x, string? y)
     {
-        return ToSearchNormalisedTitle(x).Equals(ToSearchNormalisedTitle(y));
+        return
+            x == null && y == null ||
+            x != null && y != null && ToSearchNormalisedTitle(x)!.Equals(ToSearchNormalisedTitle(y));
     }
 
     public int GetHashCode([DisallowNull] string obj)
     {
-        return ToSearchNormalisedTitle(obj).GetHashCode();
+        return ToSearchNormalisedTitle(obj)!.GetHashCode();
     }
 
     public static TitleComparer Instance { get; } = new();
 
-    public static string ToSearchNormalisedTitle(string text)
+    public static string? ToSearchNormalisedTitle(string? text)
     {
         if (text == null)
         {
@@ -95,7 +97,7 @@ public partial class TitleComparer : IEqualityComparer<string>
         return sb.ToString();
     }
 
-    public static string ExtractFeaturingCredit(string text, out int startIndex)
+    public static string? ExtractFeaturingCredit(string text, out int startIndex)
     {
         var matchForFeaturingCredit = FeaturingCreditRegex().Match(text);
         startIndex = matchForFeaturingCredit.Success ? matchForFeaturingCredit.Index : default;

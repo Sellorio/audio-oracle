@@ -48,11 +48,21 @@ internal static class ExtensionsForResult
             case System.Net.HttpStatusCode.NoContent:
             case System.Net.HttpStatusCode.OK:
                 var responseText = await responseMessage.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<TResult>(responseText, RestClient.JsonOptions);
+                return JsonSerializer.Deserialize<TResult>(responseText, RestClient.JsonOptions)!;
+            case System.Net.HttpStatusCode.NotFound:
+                responseText = await responseMessage.Content.ReadAsStringAsync();
+
+                if (responseText.Length > 0 && responseText.StartsWith('{'))
+                {
+                    return JsonSerializer.Deserialize<TResult>(responseText, RestClient.JsonOptions)!;
+                }
+                else
+                {
+                    goto default;
+                }
             case System.Net.HttpStatusCode.InternalServerError:
             default:
                 return errorToResult.Invoke("An internal error has occured.");
-
-        }
+            }
     }
 }

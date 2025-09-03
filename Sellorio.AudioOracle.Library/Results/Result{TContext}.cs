@@ -18,7 +18,7 @@ public class Result<TContext> : IResult
 
     internal Result(ImmutableArray<ResultMessage> messages)
     {
-        WasSuccess = !messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error);
+        WasSuccess = !messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound);
         Messages = messages;
     }
 

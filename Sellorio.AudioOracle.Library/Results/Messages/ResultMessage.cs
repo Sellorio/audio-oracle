@@ -11,7 +11,7 @@ public class ResultMessage
 {
     public string Text { get; }
     public ResultMessageSeverity Severity { get; }
-    public IReadOnlyList<ResultMessagePathItem> Path { get; }
+    public IReadOnlyList<ResultMessagePathItem>? Path { get; }
 
     internal ResultMessage(string text, ResultMessageSeverity severity, ImmutableArray<ResultMessagePathItem>? path)
     {
@@ -64,6 +64,11 @@ public class ResultMessage
         return new ResultMessage(message, ResultMessageSeverity.Error, null);
     }
 
+    public static ResultMessage NotFound(string objectName)
+    {
+        return new ResultMessage($"{objectName} not found.", ResultMessageSeverity.NotFound, null);
+    }
+
     public static ResultMessage Warning(string message)
     {
         return new ResultMessage(message, ResultMessageSeverity.Warning, null);
@@ -84,6 +89,12 @@ public class ResultMessage
     {
         var messagePath = ExpressionToPathHelper.GetPath(path);
         return new ResultMessage(message, ResultMessageSeverity.Error, messagePath);
+    }
+
+    public static ResultMessage NotFound<TContext>(Expression<Func<TContext, object>> path)
+    {
+        var messagePath = ExpressionToPathHelper.GetPath(path);
+        return new ResultMessage("Not found.", ResultMessageSeverity.NotFound, messagePath);
     }
 
     public static ResultMessage Warning<TContext>(Expression<Func<TContext, object>> path, string message)

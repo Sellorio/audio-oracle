@@ -7,8 +7,8 @@ namespace Sellorio.AudioOracle.Library.Results.Json;
 internal class SerialisableResult
 {
     [JsonPropertyName("m")]
-    public IEnumerable<SerialisableResultMessage> Messages { get; set; }
+    public required IEnumerable<SerialisableResultMessage> Messages { get; init; }
 
     [JsonPropertyName("v")]
-    public JsonElement Value { get; set; }
+    public required JsonElement Value { get; init; }
 }

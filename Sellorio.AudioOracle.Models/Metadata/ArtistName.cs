@@ -1,7 +1,6 @@
-﻿namespace Sellorio.AudioOracle.Models.Metadata
+﻿namespace Sellorio.AudioOracle.Models.Metadata;
+
+public class ArtistName
 {
-    public class ArtistName
-    {
-        public string Name { get; set; }
-    }
+    public required string Name { get; init; }
 }

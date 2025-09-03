@@ -1,8 +1,11 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System;
+using System.Linq;
+using Microsoft.Extensions.DependencyInjection;
 using Sellorio.AudioOracle.Client.Internal;
 using Sellorio.AudioOracle.Client.Metadata;
 using Sellorio.AudioOracle.Client.Search;
 using Sellorio.AudioOracle.Client.Sessions;
+using Sellorio.AudioOracle.Library.DependencyInjection;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
@@ -21,12 +24,15 @@ public static class ServiceCollectionExtensions
 
         // Metadata
         services.TryAddRestClient<IAlbumService, AlbumService>(clientName);
+        services.TryAddRestClient<IAlbumCreationService, AlbumCreationService>(clientName);
 
         // Search
         services.TryAddRestClient<ISearchService, SearchService>(clientName);
 
         // Sessions
         services.TryAddRestClient<IAuthenticationService, AuthenticationService>(clientName);
+
+        ServiceRegistrationHelper.EnsureAllServicesAreRegistered(services, [typeof(IAuthenticationService).Assembly]);
 
         return services;
     }

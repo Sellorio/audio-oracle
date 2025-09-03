@@ -15,11 +15,11 @@ public class ValueResult<TContext, TValue> : IResult
     public bool WasSuccess { get; }
 
     public IReadOnlyList<ResultMessage> Messages { get; }
-    public TValue Value { get; }
+    public TValue? Value { get; }
 
-    private ValueResult(ImmutableArray<ResultMessage> messages, TValue value)
+    private ValueResult(ImmutableArray<ResultMessage> messages, TValue? value)
     {
-        WasSuccess = !messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error);
+        WasSuccess = !messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound);
         Messages = messages;
         Value = value;
     }
@@ -48,7 +48,7 @@ public class ValueResult<TContext, TValue> : IResult
     {
         messages ??= [];
 
-        if (messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error))
+        if (messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound))
         {
             throw new ArgumentException("Cannot create a successful result with Critical or Error messages.", nameof(messages));
         }
@@ -65,7 +65,7 @@ public class ValueResult<TContext, TValue> : IResult
     {
         ArgumentNullException.ThrowIfNull(messages);
 
-        if (!messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error))
+        if (!messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound))
         {
             throw new ArgumentException("Cannot create a failed result without any Critical or Error messages.", nameof(messages));
         }

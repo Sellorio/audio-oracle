@@ -15,12 +15,12 @@ public class ResultMessagePathItem : IEquatable<ResultMessagePathItem>
         Value = value;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return base.Equals(obj as ResultMessagePathItem);
     }
 
-    public bool Equals(ResultMessagePathItem other)
+    public bool Equals(ResultMessagePathItem? other)
     {
         return other != null && Type == other.Type && Value.Equals(other.Value);
     }
@@ -30,12 +30,12 @@ public class ResultMessagePathItem : IEquatable<ResultMessagePathItem>
         return HashCode.Combine(Type, Value);
     }
 
-    public static bool operator ==(ResultMessagePathItem left, ResultMessagePathItem right)
+    public static bool operator ==(ResultMessagePathItem? left, ResultMessagePathItem? right)
     {
         return EqualityComparer<ResultMessagePathItem>.Default.Equals(left, right);
     }
 
-    public static bool operator !=(ResultMessagePathItem left, ResultMessagePathItem right)
+    public static bool operator !=(ResultMessagePathItem? left, ResultMessagePathItem? right)
     {
         return !(left == right);
     }

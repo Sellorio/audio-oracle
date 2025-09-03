@@ -42,7 +42,7 @@ internal class SessionService(DatabaseContext databaseContext, SessionState sess
             await databaseContext.SaveChangesAsync();
 
             sessionState.IsLoggedIn = true;
-            sessionState.SessionToken = session.Guid.Value.ToString();
+            sessionState.SessionToken = session.Guid.ToString();
 
             return sessionState.SessionToken;
         }
@@ -57,7 +57,7 @@ internal class SessionService(DatabaseContext databaseContext, SessionState sess
             return ResultMessage.Error("Cannot log out if there is no active session.");
         }
 
-        var guid = Guid.Parse(sessionState.SessionToken);
+        var guid = Guid.Parse(sessionState.SessionToken!);
         var session = await databaseContext.Sessions.SingleOrDefaultAsync(x => x.Guid == guid);
 
         // not sure how this can happen but it's best to avoid an edge case 500 error
@@ -76,7 +76,12 @@ internal class SessionService(DatabaseContext databaseContext, SessionState sess
     {
         var sessionResult = await GetAndValidateSessionAsync(sessionToken);
 
-        sessionResult.Value.LastAccessedAt = DateTimeOffset.Now;
+        if (!sessionResult.WasSuccess)
+        {
+            return sessionResult.AsResult();
+        }
+
+        sessionResult.Value!.LastAccessedAt = DateTimeOffset.Now;
         await databaseContext.SaveChangesAsync();
 
         return Result.Success();

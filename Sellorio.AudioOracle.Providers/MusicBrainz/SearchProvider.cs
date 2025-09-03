@@ -1,5 +1,6 @@
 ﻿using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Search;
+using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.Providers.MusicBrainz.Dtos;
 using Sellorio.AudioOracle.Providers.MusicBrainz.Helpers;
 using Sellorio.AudioOracle.Providers.MusicBrainz.Services;
@@ -12,11 +13,11 @@ using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Providers.MusicBrainz;
 
-internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService coverArtArchiveService) : ISearchProvider
+internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService coverArtArchiveService) : IMetadataSearchProvider
 {
-    public string SourceName => Constants.ProviderName;
+    public string ProviderName => Constants.ProviderName;
 
-    public async Task<ValueResult<PagedList<SearchResult>>> SearchAsync(string searchText, int pageSize)
+    public async Task<ValueResult<PagedList<MetadataSearchResult>>> SearchForMetadataAsync(string searchText, int pageSize)
     {
         var recordingsSearchResult = await SearchRecordingsAsync(searchText, pageSize);
         var releasesSearchResult = await SearchReleasesAsync(searchText, pageSize);
@@ -27,7 +28,7 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
         var recordingIndex = 0;
         var releaseIndex = 0;
 
-        var searchResults = new List<SearchResult>(pageSize);
+        var searchResults = new List<MetadataSearchResult>(pageSize);
 
         while ((recordingIndex < recordingCount || releaseIndex < releaseCount) && searchResults.Count < pageSize)
         {
@@ -60,7 +61,7 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
             }
         }
 
-        return new PagedList<SearchResult>
+        return new PagedList<MetadataSearchResult>
         {
             Items = searchResults,
             Page = 1,
@@ -68,9 +69,9 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
         };
     }
 
-    private async Task<RecordingsSearchResult> SearchRecordingsAsync(string searchText, int count)
+    private async Task<RecordingsSearchResultDto> SearchRecordingsAsync(string searchText, int count)
     {
-        RecordingsSearchResult result = null;
+        RecordingsSearchResultDto? result = null;
 
         await RateLimiters.MusicBrainz.WithRateLimit(async () =>
         {
@@ -78,15 +79,15 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
             var response = await httpClient.GetAsync(searchUri);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            result = JsonSerializer.Deserialize<RecordingsSearchResult>(json, Constants.JsonOptions);
+            result = JsonSerializer.Deserialize<RecordingsSearchResultDto>(json, Constants.JsonOptions);
         });
 
-        return result;
+        return result!;
     }
 
-    private async Task<ReleasesSearchResult> SearchReleasesAsync(string searchText, int count)
+    private async Task<ReleasesSearchResultDto> SearchReleasesAsync(string searchText, int count)
     {
-        ReleasesSearchResult result = null;
+        ReleasesSearchResultDto? result = null;
 
         await RateLimiters.MusicBrainz.WithRateLimit(async () =>
         {
@@ -94,13 +95,13 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
             var response = await httpClient.GetAsync(searchUri);
             response.EnsureSuccessStatusCode();
             var json = await response.Content.ReadAsStringAsync();
-            result = JsonSerializer.Deserialize<ReleasesSearchResult>(json, Constants.JsonOptions);
+            result = JsonSerializer.Deserialize<ReleasesSearchResultDto>(json, Constants.JsonOptions)!;
         });
 
-        return result;
+        return result!;
     }
 
-    private async Task<SearchResult> RecordingToSearchResultAsync(Recording recording)
+    private async Task<MetadataSearchResult?> RecordingToSearchResultAsync(RecordingDto recording)
     {
         var releases = recording.Releases.Where(ReleaseMinimumRequirements).OrderBy(GetReleasePreferenceOrder).ToArray();
 
@@ -115,32 +116,34 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
 
             if (coverArtUrl != null)
             {
-                return new SearchResult
+                return new MetadataSearchResult
                 {
-                    Album = release.Title,
+                    AlbumTitle = release.Title,
+                    AlternateAlbumTitle = null,
                     AlbumArtUrl = coverArtUrl,
-                    AlbumId = release.Id.ToString(),
-                    AlbumUrlId = release.Id.ToString(),
+                    AlbumIds = new() { SourceId = release.Id.ToString(), SourceUrlId = release.Id.ToString() },
                     Source = Constants.ProviderName,
                     Title = recording.Title,
+                    AlternateTitle = null,
                     Type = SearchResultType.Track
                 };
             }
         }
 
-        return new SearchResult
+        return new MetadataSearchResult
         {
-            Album = releases[0].Title,
+            AlbumTitle = releases[0].Title,
+            AlternateAlbumTitle = null,
             AlbumArtUrl = null,
-            AlbumId = releases[0].Id.ToString(),
-            AlbumUrlId = releases[0].Id.ToString(),
+            AlbumIds = new() { SourceId = releases[0].Id.ToString(), SourceUrlId = releases[0].Id.ToString() },
             Source = Constants.ProviderName,
             Title = recording.Title,
+            AlternateTitle = null,
             Type = SearchResultType.Track
         };
     }
 
-    private async Task<SearchResult> ReleaseToSearchResultAsync(Release release)
+    private async Task<MetadataSearchResult?> ReleaseToSearchResultAsync(ReleaseDto release)
     {
         if (!ReleaseMinimumRequirements(release))
         {
@@ -149,19 +152,20 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
 
         var coverArtUrl = await coverArtArchiveService.GetReleaseArtUrlAsync(release.Id);
 
-        return new SearchResult
+        return new MetadataSearchResult
         {
-            Album = release.Title,
+            AlbumTitle = release.Title,
+            AlternateAlbumTitle = null,
             AlbumArtUrl = coverArtUrl,
-            AlbumId = release.Id.ToString(),
-            AlbumUrlId = release.Id.ToString(),
+            AlbumIds = new() { SourceId = release.Id.ToString(), SourceUrlId = release.Id.ToString() },
             Source = Constants.ProviderName,
             Title = release.Title,
+            AlternateTitle = null,
             Type = SearchResultType.Album
         };
     }
 
-    private int GetReleasePreferenceOrder(Release release)
+    private int GetReleasePreferenceOrder(ReleaseDto release)
     {
         var result = 0;
 
@@ -171,7 +175,7 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
         return result;
     }
 
-    private bool ReleaseMinimumRequirements(Release release)
+    private bool ReleaseMinimumRequirements(ReleaseDto release)
     {
         return release.Media.All(x => x.Format is "CD" or "Digital Media");
     }

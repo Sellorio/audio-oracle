@@ -48,7 +48,7 @@ internal class ValidationBuilder<TObject>(TObject target, IServiceProvider servi
     {
         var messagePath = ExpressionToPathHelper.GetPath(path);
         var childGetter = path.Compile();
-        TNewObject child = default;
+        TNewObject? child = default;
 
         try
         {
@@ -83,7 +83,7 @@ internal class ValidationBuilder<TObject>(TObject target, IServiceProvider servi
     {
         var messagePath = ExpressionToPathHelper.GetPath(path);
         var childGetter = path.Compile();
-        TNewObject child = default;
+        TNewObject? child = default;
 
         try
         {
@@ -116,7 +116,7 @@ internal class ValidationBuilder<TObject>(TObject target, IServiceProvider servi
     {
         var messagePath = ExpressionToPathHelper.GetPath(path);
         var childGetter = path.Compile();
-        IEnumerable<TNewObject> child = default;
+        IEnumerable<TNewObject>? child = default;
 
         try
         {
@@ -154,7 +154,7 @@ internal class ValidationBuilder<TObject>(TObject target, IServiceProvider servi
     {
         var messagePath = ExpressionToPathHelper.GetPath(path);
         var childGetter = path.Compile();
-        IEnumerable<TNewObject> child = default;
+        IEnumerable<TNewObject>? child = default;
 
         try
         {
@@ -191,7 +191,7 @@ internal class ValidationBuilder<TObject>(TObject target, IServiceProvider servi
     public async Task UseValidator<TValidator>() where TValidator : IValidatorWithoutContext<TObject>
     {
         var validator =
-            (TValidator)serviceProvider.GetService(typeof(TValidator))
+            (TValidator?)serviceProvider.GetService(typeof(TValidator))
                 ?? throw new InvalidOperationException("Validator missing from service provider.");
 
         await validator.ValidateAsync(this);
@@ -200,7 +200,7 @@ internal class ValidationBuilder<TObject>(TObject target, IServiceProvider servi
     public async Task UseValidator<TValidator, TContext>(TContext context) where TValidator : IValidatorWithContext<TObject, TContext>
     {
         var validator =
-            (TValidator)serviceProvider.GetService(typeof(TValidator))
+            (TValidator?)serviceProvider.GetService(typeof(TValidator))
                 ?? throw new InvalidOperationException("Validator missing from service provider.");
 
         await validator.ValidateAsync(this, context);

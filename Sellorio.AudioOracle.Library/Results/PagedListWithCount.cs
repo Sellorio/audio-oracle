@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 
-namespace Sellorio.AudioOracle.Library.Results
+namespace Sellorio.AudioOracle.Library.Results;
+
+public class PagedListWithCount<TItem>
 {
-    public class PagedListWithCount<TItem>
-    {
-        public int Page { get; set; }
-        public int PageSize { get; set; }
-        public int TotalItems { get; set; }
-        public int TotalPages { get; set; }
-        public List<TItem> Items { get; set; }
-    }
+    public required int Page { get; init; }
+    public required int PageSize { get; init; }
+    public required int TotalItems { get; init; }
+    public required int TotalPages { get; init; }
+    public required List<TItem> Items { get; init; }
 }

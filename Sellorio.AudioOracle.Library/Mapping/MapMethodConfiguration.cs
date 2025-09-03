@@ -3,41 +3,40 @@ using System.Collections.Generic;
 using System.Linq;
 using AutoMapper;
 
-namespace Sellorio.AudioOracle.Library.Mapping
+namespace Sellorio.AudioOracle.Library.Mapping;
+
+public class MapMethodConfiguration<TMapper>
 {
-    public class MapMethodConfiguration<TMapper>
+    private readonly IMapperConfigurationExpression _configure;
+    private readonly List<(Type From, Type To)> _registeredMappers = [];
+
+    internal MapMethodConfiguration(IMapperConfigurationExpression configure)
     {
-        private readonly IMapperConfigurationExpression _configure;
-        private readonly List<(Type From, Type To)> _registeredMappers = [];
+        _configure = configure;
+    }
 
-        internal MapMethodConfiguration(IMapperConfigurationExpression configure)
-        {
-            _configure = configure;
-        }
+    public MapMethodConfiguration<TMapper> AddWithConfig<TFrom, TTo>(Action<IMappingExpression<TFrom, TTo>> configure)
+    {
+        var map = _configure.CreateMap<TFrom, TTo>();
+        _registeredMappers.Add((typeof(TFrom), typeof(TTo)));
+        configure?.Invoke(map);
+        return this;
+    }
 
-        public MapMethodConfiguration<TMapper> AddWithConfig<TFrom, TTo>(Action<IMappingExpression<TFrom, TTo>> configure)
+    internal void AddRemainingMapMethods()
+    {
+        foreach (var method in typeof(TMapper).GetMethods().Where(x => x.ReturnType != null && x.ReturnType != typeof(void)))
         {
-            var map = _configure.CreateMap<TFrom, TTo>();
-            _registeredMappers.Add((typeof(TFrom), typeof(TTo)));
-            configure?.Invoke(map);
-            return this;
-        }
+            var parameters = method.GetParameters();
 
-        internal void AddRemainingMapMethods()
-        {
-            foreach (var method in typeof(TMapper).GetMethods().Where(x => x.ReturnType != null && x.ReturnType != typeof(void)))
+            if (parameters.Length == 1)
             {
-                var parameters = method.GetParameters();
+                var from = parameters[0].ParameterType;
+                var to = method.ReturnType;
 
-                if (parameters.Length == 1)
+                if (!_registeredMappers.Contains((from, to)))
                 {
-                    var from = parameters[0].ParameterType;
-                    var to = method.ReturnType;
-
-                    if (!_registeredMappers.Contains((from, to)))
-                    {
-                        _configure.CreateMap(from, to);
-                    }
+                    _configure.CreateMap(from, to);
                 }
             }
         }

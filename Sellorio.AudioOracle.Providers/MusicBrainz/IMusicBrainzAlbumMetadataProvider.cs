@@ -6,5 +6,5 @@ namespace Sellorio.AudioOracle.Providers.MusicBrainz;
 
 internal interface IMusicBrainzAlbumMetadataProvider
 {
-    Task<Release> GetMusicBrainzReleaseAsync(Guid id);
+    Task<ReleaseDto?> GetMusicBrainzReleaseAsync(Guid id);
 }

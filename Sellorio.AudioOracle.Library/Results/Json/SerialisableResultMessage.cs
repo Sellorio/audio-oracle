@@ -7,11 +7,11 @@ namespace Sellorio.AudioOracle.Library.Results.Json;
 internal class SerialisableResultMessage
 {
     [JsonPropertyName("p")]
-    public IEnumerable<SerialisablePathItem> Path { get; set; }
+    public required IEnumerable<SerialisablePathItem>? Path { get; init; }
 
     [JsonPropertyName("s")]
-    public ResultMessageSeverity Severity { get; set; }
+    public required ResultMessageSeverity Severity { get; init; }
 
     [JsonPropertyName("t")]
-    public string Text { get; set; }
+    public required string Text { get; init; }
 }

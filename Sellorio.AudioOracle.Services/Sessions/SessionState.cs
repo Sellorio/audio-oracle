@@ -3,5 +3,5 @@
 internal class SessionState
 {
     public bool IsLoggedIn { get; set; }
-    public string SessionToken { get; set; }
+    public string? SessionToken { get; set; }
 }

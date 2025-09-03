@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace Sellorio.AudioOracle.Data.Content
+namespace Sellorio.AudioOracle.Data.Content;
+
+public class FileContentData
 {
-    public class FileContentData
-    {
-        public int Id { get; set; }
+    public int Id { get; set; }
 
-        public byte[] Data { get; set; }
-    }
+    [Required]
+    public required byte[] Data { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Sellorio.AudioOracle.Library.Results;
@@ -15,6 +16,10 @@ internal static class ExtensionsForControllers
         if (result.WasSuccess)
         {
             return new ObjectResult(result) { StatusCode = (int)successStatusCode };
+        }
+        else if (result.Messages.All(x => x.Severity is Library.Results.Messages.ResultMessageSeverity.NotFound))
+        {
+            return new ObjectResult(result) { StatusCode = (int)HttpStatusCode.NotFound };
         }
 
         return new ObjectResult(result) { StatusCode = (int)failureStatusCode };

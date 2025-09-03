@@ -8,14 +8,14 @@ using System.Text.Json.Serialization;
 
 namespace Sellorio.AudioOracle.Library.Results.Json;
 
-internal class ResultJsonConverter : JsonConverter<IResult>
+internal class ResultJsonConverter : JsonConverter<IResult?>
 {
     public override bool CanConvert(Type typeToConvert)
     {
         return typeof(IResult).IsAssignableFrom(typeToConvert);
     }
 
-    public override IResult Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override IResult? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         var serialisableResult = JsonSerializer.Deserialize<SerialisableResult>(ref reader, options);
 
@@ -35,8 +35,14 @@ internal class ResultJsonConverter : JsonConverter<IResult>
         return result;
     }
 
-    public override void Write(Utf8JsonWriter writer, IResult value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, IResult? value, JsonSerializerOptions options)
     {
+        if (value == null)
+        {
+            writer.WriteNullValue();
+            return;
+        }
+
         var serialisableResult = new SerialisableResult
         {
             Messages = value.Messages.Select(ConvertToSerialisable).ToList(),
@@ -46,9 +52,9 @@ internal class ResultJsonConverter : JsonConverter<IResult>
         JsonSerializer.Serialize(writer, serialisableResult, options);
     }
 
-    private static object DeserializeValue(JsonElement jsonValue, Type resultType, JsonSerializerOptions options)
+    private static object? DeserializeValue(JsonElement jsonValue, Type resultType, JsonSerializerOptions options)
     {
-        object value = null;
+        object? value = null;
 
         PerResultType(
             resultType,
@@ -60,9 +66,9 @@ internal class ResultJsonConverter : JsonConverter<IResult>
         return value;
     }
 
-    private static IResult CreateResult(Type resultType, object value, SerialisableResult serialisableResult)
+    private static IResult CreateResult(Type resultType, object? value, SerialisableResult serialisableResult)
     {
-        IResult result = null;
+        IResult? result = null;
 
         PerResultType(
             resultType,
@@ -73,14 +79,14 @@ internal class ResultJsonConverter : JsonConverter<IResult>
                         .Invoke(null, [serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()])!,
             forValueResult1: () =>
                 result =
-                    (IResult)(serialisableResult.Messages!.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error)
+                    (IResult)(serialisableResult.Messages!.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound)
                         ? resultType.GetMethod(nameof(ValueResult<object>.Failure), BindingFlags.Static | BindingFlags.Public)!
                             .Invoke(null, [serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()])
                         : resultType.GetMethod(nameof(ValueResult<object>.Success), BindingFlags.Static | BindingFlags.Public)!
                             .Invoke(null, [value, serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()]))!,
             forValueResult2: () =>
                 result =
-                    (IResult)(serialisableResult.Messages!.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error)
+                    (IResult)(serialisableResult.Messages!.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound)
                         ? resultType.GetMethod(nameof(ValueResult<object, object>.Failure), BindingFlags.Static | BindingFlags.Public)!
                             .Invoke(null, [serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()])
                         : resultType.GetMethod(nameof(ValueResult<object, object>.Success), BindingFlags.Static | BindingFlags.Public)!
@@ -95,8 +101,8 @@ internal class ResultJsonConverter : JsonConverter<IResult>
 
         PerResultType(
             result.GetType(),
-            forResult: () => jsonValue = JsonSerializer.SerializeToElement((object)null),
-            forResult1: () => jsonValue = JsonSerializer.SerializeToElement((object)null),
+            forResult: () => jsonValue = JsonSerializer.SerializeToElement((object?)null),
+            forResult1: () => jsonValue = JsonSerializer.SerializeToElement((object?)null),
             forValueResult1: () =>
             {
                 var value = result.GetType().GetProperty(nameof(ValueResult<object>.Value))!.GetValue(result);

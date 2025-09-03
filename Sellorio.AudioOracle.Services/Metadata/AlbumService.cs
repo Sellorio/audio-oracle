@@ -27,6 +27,12 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
     {
         var query = WithFields(databaseContext.Albums, fields);
         var data = await query.AsNoTracking().SingleOrDefaultAsync(x => x.Id == id);
+
+        if (data == null)
+        {
+            return ResultMessage.NotFound("Album");
+        }
+
         return mapper.Map(data);
     }
 
@@ -37,14 +43,14 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
 
         if (data == null)
         {
-            return ResultMessage.Error("Album not found.");
+            return ResultMessage.NotFound("Album");
         }
 
         databaseContext.Albums.Remove(data);
 
         if (deleteFiles)
         {
-            foreach (var track in data.Tracks)
+            foreach (var track in data.Tracks!)
             {
                 track.Status = TrackStatus.DeleteRequested;
             }
@@ -53,7 +59,7 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
         }
         else
         {
-            databaseContext.Tracks.RemoveRange(data.Tracks);
+            databaseContext.Tracks.RemoveRange(data.Tracks!);
         }
 
         await databaseContext.SaveChangesAsync();
@@ -100,7 +106,7 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
         {
             if (fields.HasFlag(AlbumFields.Artists))
             {
-                query = query.Include(x => x.Tracks).ThenInclude(x => x.Artists);
+                query = query.Include(x => x.Tracks)!.ThenInclude(x => x.Artists);
             }
             else
             {

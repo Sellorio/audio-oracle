@@ -1,8 +1,8 @@
-﻿namespace Sellorio.AudioOracle.Models.Content
+﻿namespace Sellorio.AudioOracle.Models.Content;
+
+public enum FileType
 {
-    public enum FileType
-    {
-        Unspecified,
-        ImageJpeg
-    }
+    Unspecified,
+    ImageJpeg,
+    ImagePng
 }
