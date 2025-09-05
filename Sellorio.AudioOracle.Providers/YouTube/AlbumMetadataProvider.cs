@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using Sellorio.AudioOracle.Library.ApiTools;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
@@ -9,14 +11,20 @@ using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
 
-internal class AlbumMetadataProvider(IApiService apiService, IBrowseService browseService, IEnumerable<ITrackMetadataProvider> trackMetadataProviders) : IAlbumMetadataProvider
+internal class AlbumMetadataProvider(IApiService apiService, IBrowseService browseService, ITrackIdsResolver trackIdsResolver) : IAlbumMetadataProvider, IYouTubeAlbumMetadataProvider
 {
+    private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
+    private static readonly TimeSpan _cacheDuration = TimeSpan.MaxValue;
+
     public string ProviderName => Constants.ProviderName;
 
     public async Task<ValueResult<AlbumMetadata>> GetAlbumMetadataAsync(ResolvedIds resolvedIds)
     {
-        var trackMetadataProvider = trackMetadataProviders.First(x => x.ProviderName == Constants.ProviderName);
+        return await ProviderHelper.GetWithCacheAsync(_cache, _cacheDuration, resolvedIds, GetAlbumMetadataWithoutCacheAsync);
+    }
 
+    private async Task<ValueResult<AlbumMetadata>> GetAlbumMetadataWithoutCacheAsync(ResolvedIds resolvedIds)
+    {
         var browseId = "VL" + resolvedIds.SourceId;
         var apiResult = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId });
         var contents = apiResult["contents"];
@@ -68,21 +76,19 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
             var trackId = trackElements[i]!["musicResponsiveListItemRenderer"]!["playlistItemData"]!.Get<string>("videoId")!;
             var trackTitle = trackElements[i]!["musicResponsiveListItemRenderer"]!["flexColumns"]![0]!["musicResponsiveListItemFlexColumnRenderer"]!["text"]!["runs"]![0]!.Get<string>("text")!;
 
-            var trackIds = new ResolvedIds() { SourceId = trackId, SourceUrlId = trackId };
-
             if (shouldResolveTrackIds)
             {
-                var trackIdsResult = await trackMetadataProvider.ResolveTrackIdsAsync(trackId);
+                var trackIdResult = await trackIdsResolver.GetLatestIdAsync(trackId);
 
-                if (trackIdsResult.WasSuccess)
+                if (trackIdResult.WasSuccess)
                 {
-                    trackIds = trackIdsResult.Value;
+                    trackId = trackIdResult.Value;
                 }
             }
 
             tracks[i] = new AlbumTrackMetadata
             {
-                Ids = new() { SourceId = trackId, SourceUrlId = trackId },
+                Ids = new ResolvedIds() { SourceId = trackId, SourceUrlId = trackId },
                 Title = trackTitle
             };
         }

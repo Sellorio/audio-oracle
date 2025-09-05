@@ -35,7 +35,10 @@ internal static class ProviderHelper
     {
         var lazyTask = cache.GetOrCreate(key!, (entry) =>
         {
-            entry.AbsoluteExpirationRelativeToNow = cacheDuration;
+            if (cacheDuration != TimeSpan.MaxValue)
+            {
+                entry.AbsoluteExpirationRelativeToNow = cacheDuration;
+            }
 
             return
                 new Lazy<Task<TResult>>(() => getter.Invoke(key),
