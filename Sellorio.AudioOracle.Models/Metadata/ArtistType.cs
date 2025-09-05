@@ -2,6 +2,7 @@
 
 public enum ArtistType
 {
+    Unknown,
     Person,
     Group,
     Character

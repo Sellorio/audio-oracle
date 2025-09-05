@@ -61,15 +61,6 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
                 GetReleaseAsync);
     }
 
-    public Task<ValueResult<ResolvedIds>> ResolveAlbumIdsAsync(string sourceUrlId)
-    {
-        return Task.FromResult(ValueResult.Success(new ResolvedIds
-        {
-            SourceId = sourceUrlId,
-            SourceUrlId = sourceUrlId
-        }));
-    }
-
     private async Task<ReleaseDto?> GetReleaseAsync(Guid id)
     {
         var responseMessage = await httpClient.GetAsync($"release/{id}?fmt=json&inc=artists+media+recordings");

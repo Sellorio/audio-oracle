@@ -20,19 +20,24 @@ public class JsonNavigator
         _element = element;
     }
 
-    public JsonNavigator this[string propertyKey] => _element.ValueKind != JsonValueKind.Array && _element.TryGetProperty(propertyKey, out var el) ? new(el) : null;
-    public JsonNavigator this[int arrayIndex] => _element.ValueKind == JsonValueKind.Array && ArrayLength > arrayIndex ? new(_element[arrayIndex]) : null;
+    public JsonNavigator? this[string propertyKey] => _element.ValueKind != JsonValueKind.Array && _element.TryGetProperty(propertyKey, out var el) ? new(el) : null;
+    public JsonNavigator? this[int arrayIndex] => _element.ValueKind == JsonValueKind.Array && ArrayLength > arrayIndex ? new(_element[arrayIndex]) : null;
 
     public int ArrayLength => _arrayLength ?? (_arrayLength = _element.GetArrayLength()).Value;
 
-    public JsonNavigator Nth(int arrayIndex)
+    public JsonNavigator? Nth(int arrayIndex)
     {
         return this[arrayIndex];
     }
 
-    public JsonNavigator NthFromLast(int arrayIndex)
+    public JsonNavigator? NthFromLast(int arrayIndex)
     {
         return this[_element.GetArrayLength() - arrayIndex - 1];
+    }
+
+    public IEnumerable<JsonNavigator?> AsEnumerable()
+    {
+        return _element.EnumerateArray().Select(x => x.ValueKind == JsonValueKind.Null ? null : new JsonNavigator(x));
     }
 
     public IEnumerable<TValue> Select<TValue>(Func<JsonNavigator, TValue> selector)
@@ -45,14 +50,14 @@ public class JsonNavigator
         return _element.EnumerateArray().Select(x => new JsonNavigator(x)).Where(selector.Invoke);
     }
 
-    public TValue Get<TValue>(string propertyKey)
+    public TValue? Get<TValue>(string propertyKey)
     {
-        return (TValue)Get(_element.GetProperty(propertyKey), typeof(TValue));
+        return (TValue?)Get(_element.GetProperty(propertyKey), typeof(TValue));
     }
 
-    public TValue Get<TValue>(int arrayIndex)
+    public TValue? Get<TValue>(int arrayIndex)
     {
-        return (TValue)Get(_element[arrayIndex], typeof(TValue));
+        return (TValue?)Get(_element[arrayIndex], typeof(TValue));
     }
 
     public static JsonNavigator FromString(string json)
@@ -61,7 +66,7 @@ public class JsonNavigator
         return new(document.RootElement);
     }
 
-    private static object Get(JsonElement element, Type targetType)
+    private static object? Get(JsonElement element, Type targetType)
     {
         if (targetType == typeof(bool))
             return element.GetBoolean();
@@ -112,14 +117,16 @@ public class JsonNavigator
             return element.GetGuid();
 
         if (targetType == typeof(string))
-            return element.GetString();
+            return element.GetString()!;
 
         if (targetType.IsEnum)
         {
             if (element.ValueKind == JsonValueKind.String)
             {
                 var stringValue = element.GetString();
-                return targetType.GetEnumValues().Cast<object>().FirstOrDefault(x => x.ToString() == stringValue);
+                return
+                    targetType.GetEnumValues().Cast<object>().FirstOrDefault(x => x.ToString() == stringValue)
+                        ?? throw new InvalidOperationException("Unable to convert element value to enum.");
             }
             
             if (element.ValueKind == JsonValueKind.Number)

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Providers.MusicBrainz;
 
-internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService coverArtArchiveService) : IMetadataSearchProvider
+internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveService coverArtArchiveService) : IMetadataSearchProvider
 {
     public string ProviderName => Constants.ProviderName;
 
@@ -125,7 +125,8 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
                     Source = Constants.ProviderName,
                     Title = recording.Title,
                     AlternateTitle = null,
-                    Type = SearchResultType.Track
+                    Type = SearchResultType.Track,
+                    ArtistNames = release.ArtistCredit.Select(x => x.Artist.Name).ToArray()
                 };
             }
         }
@@ -139,7 +140,8 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
             Source = Constants.ProviderName,
             Title = recording.Title,
             AlternateTitle = null,
-            Type = SearchResultType.Track
+            Type = SearchResultType.Track,
+            ArtistNames = recording.ArtistCredit.Select(x => x.Artist.Name).ToArray()
         };
     }
 
@@ -161,7 +163,8 @@ internal class SearchProvider(HttpClient httpClient, ICoverArtArchiveService cov
             Source = Constants.ProviderName,
             Title = release.Title,
             AlternateTitle = null,
-            Type = SearchResultType.Album
+            Type = SearchResultType.Album,
+            ArtistNames = release.ArtistCredit.Select(x => x.Artist.Name).ToArray()
         };
     }
 

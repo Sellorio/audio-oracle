@@ -4,5 +4,5 @@ using System.Threading.Tasks;
 namespace Sellorio.AudioOracle.Providers.YouTube.Services;
 internal interface IApiService
 {
-    Task<JsonNavigator> GetAsync(string url, object requestParameters);
+    Task<JsonNavigator> PostWithContextAsync(string url, object requestParameters);
 }
