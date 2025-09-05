@@ -30,7 +30,9 @@ public static class ServiceCollectionExtensions
             .AddTransient<IArtistMetadataProvider, ArtistMetadataProvider>()
             .AddTransient<ITrackMetadataProvider, TrackMetadataProvider>()
             .AddTransient<IDownloadSearchProvider, DownloadSearchProvider>()
-            .AddTransient<IDownloadProvider, DownloadProvider>();
+            .AddTransient<IDownloadProvider, DownloadProvider>()
+            .AddTransient<IYtDlpService, YtDlpService>()
+            .AddTransient<IFfmpegService, FfmpegService>();
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(
             services,
