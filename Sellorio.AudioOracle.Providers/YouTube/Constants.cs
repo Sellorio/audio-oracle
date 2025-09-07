@@ -8,4 +8,7 @@ internal static class Constants
     public const string UnregisteredArtistIdPrefix = "unreg:";
     public const string UnregisteredArtistIdFormat = UnregisteredArtistIdPrefix + "{{ALBUM_ID}}:{{ARTIST_NAME}}";
     public const string YouTubeIdRegex = "[a-zA-Z0-9_-]+";
+
+    public const string SearchBySongsParams = "EgWKAQIIAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
+    public const string SearchByAlbumsParams = "EgWKAQIYAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
 }

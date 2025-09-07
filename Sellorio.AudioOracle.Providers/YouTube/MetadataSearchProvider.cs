@@ -12,15 +12,12 @@ namespace Sellorio.AudioOracle.Providers.YouTube;
 
 internal class MetadataSearchProvider(IApiService apiService, IBrowseService browseService) : IMetadataSearchProvider
 {
-    private const string GetSongsParams = "EgWKAQIIAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
-    private const string GetAlbumsParams = "EgWKAQIYAWoQEAMQBBAJEAoQBRAREBAQFQ%3D%3D";
-
     public string ProviderName => Constants.ProviderName;
 
     public async Task<ValueResult<PagedList<MetadataSearchResult>>> SearchForMetadataAsync(string searchText, int pageSize)
     {
-        var albumSearchResults = await SearchAsync(searchText, GetAlbumsParams, ConvertAlbumResultAsync);
-        var songSearchResults = await SearchAsync(searchText, GetSongsParams, ConvertSongResultAsync);
+        var albumSearchResults = await SearchAsync(searchText, Constants.SearchByAlbumsParams, ConvertAlbumResultAsync);
+        var songSearchResults = await SearchAsync(searchText, Constants.SearchBySongsParams, ConvertSongResultAsync);
 
         var albumsToTake =
             Math.Min(
@@ -43,7 +40,7 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
 
     private async Task<MetadataSearchResult[]> SearchAsync(string searchText, string @params, Func<JsonNavigator, Task<MetadataSearchResult>> searchResultConverter)
     {
-        var searchResponse = await apiService.PostWithContextAsync("/search?prettyPrint=false", new { @params = @params, query = searchText });
+        var searchResponse = await apiService.PostWithContextAsync("/search?prettyPrint=false", new { @params, query = searchText });
         var searchResultsJson =
             searchResponse["contents"]?["tabbedSearchResultsRenderer"]?["tabs"]?[0]?["tabRenderer"]?["content"]?["sectionListRenderer"]?["contents"]?[0]?["musicShelfRenderer"]?["contents"]
                 ?? throw new InvalidOperationException("Unable to parse search results.");
