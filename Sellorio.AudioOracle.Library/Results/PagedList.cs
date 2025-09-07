@@ -6,5 +6,5 @@ public class PagedList<TItem>
 {
     public required int Page { get; init; }
     public required int PageSize { get; init; }
-    public required List<TItem> Items { get; init; }
+    public required IList<TItem> Items { get; init; }
 }

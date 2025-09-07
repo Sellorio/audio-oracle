@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
                 o.BaseAddress = new Uri("https://musicbrainz.org/ws/2/");
                 o.DefaultRequestHeaders.UserAgent.ParseAdd(ProviderConstants.UserAgent);
             })
-            .AddTypedClient<IMetadataSearchProvider, SearchProvider>()
+            .AddTypedClient<IMetadataSearchProvider, MetadataSearchProvider>()
             .AddTypedClient<IAlbumMetadataProvider, AlbumMetadataProvider>()
             .AddTypedClient<IMusicBrainzAlbumMetadataProvider, AlbumMetadataProvider>()
             .AddTypedClient<ITrackMetadataProvider, TrackMetadataProvider>()

@@ -6,6 +6,7 @@ namespace Sellorio.AudioOracle.Providers;
 
 public interface IDownloadProvider : IProvider
 {
-    Task<Result> DownloadTrackAsync(ResolvedIds trackIds, string outputFilename);
+    bool IsSupportedDownloadUrl(string url);
     Task<ValueResult<ResolvedIds>> ResolveIdsFromTrackUrlAsync(string downloadUrl);
+    Task<Result> DownloadTrackAsync(ResolvedIds trackIds, string outputFilename);
 }

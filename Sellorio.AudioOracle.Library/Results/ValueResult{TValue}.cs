@@ -11,16 +11,18 @@ namespace Sellorio.AudioOracle.Library.Results;
 [JsonConverter(typeof(ResultJsonConverter))]
 public class ValueResult<TValue> : IResult
 {
+    private readonly TValue? _value;
+
     public bool WasSuccess { get; }
 
     public IReadOnlyList<ResultMessage> Messages { get; }
-    public TValue? Value { get; }
+    public TValue Value => WasSuccess ? _value! : throw new InvalidOperationException("Cannot get result value for unsuccessful results.");
 
     private ValueResult(ImmutableArray<ResultMessage> messages, TValue? value)
     {
         WasSuccess = !messages.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound);
         Messages = messages;
-        Value = value;
+        _value = value;
     }
 
     public Result AsResult()

@@ -54,13 +54,4 @@ internal class TrackMetadataProvider(
             TrackNumber = int.Parse(track.Number)
         };
     }
-
-    public Task<ValueResult<ResolvedIds>> ResolveTrackIdsAsync(string sourceUrlId)
-    {
-        return Task.FromResult(ValueResult.Success(new ResolvedIds
-        {
-            SourceUrlId = sourceUrlId,
-            SourceId = sourceUrlId
-        }));
-    }
 }
