@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.Results;
+using Sellorio.AudioOracle.Providers.Common;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.Providers.YouTube.Services;
 

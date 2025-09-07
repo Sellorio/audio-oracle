@@ -8,8 +8,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
+using Sellorio.AudioOracle.Providers.YouTube;
 
-namespace Sellorio.AudioOracle.Providers.YouTube.Services;
+namespace Sellorio.AudioOracle.Providers.Common;
 
 internal class FfmpegService(HttpClient httpClient) : IFfmpegService
 {

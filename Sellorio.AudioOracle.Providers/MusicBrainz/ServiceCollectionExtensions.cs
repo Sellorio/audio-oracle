@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.Extensions.DependencyInjection;
 using Sellorio.AudioOracle.Library.DependencyInjection;
+using Sellorio.AudioOracle.Providers.Common;
 using Sellorio.AudioOracle.Providers.MusicBrainz.Services;
 
 namespace Sellorio.AudioOracle.Providers.MusicBrainz;
@@ -9,6 +10,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMusicBrainzProvider(this IServiceCollection services)
     {
+        services.AddCommonProviderServices();
+
         services
             .AddHttpClient(Constants.ProviderName + "MB", o =>
             {

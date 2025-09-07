@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.Results;
 
-namespace Sellorio.AudioOracle.Providers.YouTube.Services;
+namespace Sellorio.AudioOracle.Providers.Common;
 
 internal interface IFfmpegService
 {

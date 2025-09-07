@@ -4,6 +4,7 @@ using System.Net;
 using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Sellorio.AudioOracle.Library.DependencyInjection;
+using Sellorio.AudioOracle.Providers.Common;
 using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
@@ -12,6 +13,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddYouTubeProvider(this IServiceCollection services)
     {
+        services.AddCommonProviderServices();
+
         services
             .AddHttpClient(Constants.ProviderName + "Api", o =>
             {
@@ -31,8 +34,7 @@ public static class ServiceCollectionExtensions
             .AddTransient<ITrackMetadataProvider, TrackMetadataProvider>()
             .AddTransient<IDownloadSearchProvider, DownloadSearchProvider>()
             .AddTransient<IDownloadProvider, DownloadProvider>()
-            .AddTransient<IYtDlpService, YtDlpService>()
-            .AddTransient<IFfmpegService, FfmpegService>();
+            .AddTransient<IYtDlpService, YtDlpService>();
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(
             services,
