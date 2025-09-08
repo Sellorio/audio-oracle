@@ -8,7 +8,7 @@ namespace Sellorio.AudioOracle.Data.Metadata;
 [Index(nameof(Source), nameof(SourceId), IsUnique = true)]
 public class ArtistData
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
     [Required]
     public required string Source { get; set; }

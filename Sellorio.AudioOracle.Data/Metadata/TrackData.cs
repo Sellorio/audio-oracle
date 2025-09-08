@@ -10,7 +10,7 @@ namespace Sellorio.AudioOracle.Data.Metadata;
 [Index(nameof(MetadataSource), nameof(MetadataSourceId), IsUnique = true)]
 public class TrackData
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
     [Required]
     public int? AlbumId { get; set; }

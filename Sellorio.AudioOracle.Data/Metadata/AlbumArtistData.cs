@@ -4,7 +4,7 @@ namespace Sellorio.AudioOracle.Data.Metadata;
 
 public class AlbumArtistData
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
     [Required]
     public int? ArtistId { get; set; }

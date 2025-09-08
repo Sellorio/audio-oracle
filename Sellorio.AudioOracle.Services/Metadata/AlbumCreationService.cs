@@ -1,5 +1,8 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Sellorio.AudioOracle.Data;
@@ -74,8 +77,9 @@ internal class AlbumCreationService(
                 SourceId = searchResult.AlbumId,
                 SourceUrlId = searchResult.AlbumUrlId,
                 Title = searchResult.AlbumTitle,
-                TrackCount = albumMetadataResult.Value.TrackCount,
-                Tracks = ConvertToTrackDatas(searchResult.Source, albumMetadataResult.Value.Tracks)
+                TrackCount = (ushort)albumMetadataResult.Value.Tracks.Count,
+                Tracks = ConvertToTrackDatas(searchResult.Source, albumMetadataResult.Value.Tracks),
+                FolderName = await GenerateUniqueFolderNameAsync(searchResult.AlbumTitle, albumMetadataResult.Value.ReleaseYear)
             };
 
             databaseContext.Albums.Add(albumData);
@@ -85,6 +89,22 @@ internal class AlbumCreationService(
 
             return mappedAlbum;
         });
+    }
+
+    private async Task<string> GenerateUniqueFolderNameAsync(string albumName, int? albumYear)
+    {
+        var escapedAlbumName = EscapePathItem(albumName);
+        var resultWithoutCounter = albumYear == null ? escapedAlbumName : $"{escapedAlbumName} ({albumYear.Value})";
+        var result = resultWithoutCounter;
+        var counter = 1;
+
+        while (await databaseContext.Albums.AnyAsync(x => x.FolderName.Equals(result, StringComparison.OrdinalIgnoreCase)))
+        {
+            counter++;
+            result = resultWithoutCounter + " " + counter;
+        }
+
+        return result;
     }
 
     private static IList<TrackData> ConvertToTrackDatas(string providerName, IList<AlbumTrackMetadata> albumTrackMetadata)
@@ -98,5 +118,21 @@ internal class AlbumCreationService(
             IsRequested = true,
             Status = TrackStatus.MissingMetadata
         }).ToArray();
+    }
+
+    private static string EscapePathItem(string value)
+    {
+        var invalidCharacters = Enumerable.Union(Path.GetInvalidPathChars(), Path.GetInvalidFileNameChars());
+        var result = new StringBuilder(value.Length);
+
+        foreach (char c in value)
+        {
+            if (!invalidCharacters.Contains(c))
+            {
+                result.Append(c);
+            }
+        }
+
+        return result.ToString();
     }
 }

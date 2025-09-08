@@ -101,6 +101,29 @@ internal class ProviderInvocationService(IServiceProvider serviceProvider, ILogg
         }
     }
 
+    public async Task<Result> InvokeAsync<TProvider>(string providerName, Func<TProvider, Task<Result>> providerInvocation)
+        where TProvider : IProvider
+    {
+        var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
+        var provider = providersEnumerable.FirstOrDefault(x => x.ProviderName == providerName);
+
+        if (provider == null)
+        {
+            return ResultMessage.Error($"Missing expected {typeof(TProvider).Name} implementation for {providerName}.");
+        }
+
+        try
+        {
+            return await providerInvocation.Invoke(provider);
+        }
+        catch (Exception ex)
+        {
+            var messages = new List<ResultMessage>();
+            HandleException(ex, provider.ProviderName, messages, ResultMessageSeverity.Critical);
+            return messages[0];
+        }
+    }
+
     private void HandleException(Exception ex, string providerName, List<ResultMessage> messages, ResultMessageSeverity severity)
     {
         var messageText = $"Failure when invoking {providerName} provider. See logs for more info.";

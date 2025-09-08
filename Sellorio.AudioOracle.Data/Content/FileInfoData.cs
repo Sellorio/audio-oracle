@@ -7,7 +7,7 @@ namespace Sellorio.AudioOracle.Data.Content;
 [Index(nameof(OriginalUrl), IsUnique = true)]
 public class FileInfoData
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
     [Required]
     public int? ContentId { get; set; }

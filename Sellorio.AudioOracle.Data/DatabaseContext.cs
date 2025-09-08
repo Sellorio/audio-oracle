@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Sellorio.AudioOracle.Data.Content;
 using Sellorio.AudioOracle.Data.Metadata;
 using Sellorio.AudioOracle.Data.Sessions;
+using Sellorio.AudioOracle.Data.TaskQueue;
 
 namespace Sellorio.AudioOracle.Data;
 
@@ -25,6 +26,9 @@ public class DatabaseContext : DbContext
 
     // Sessions
     public DbSet<SessionData> Sessions { get; set; }
+
+    // TaskQueue
+    public DbSet<QueuedTaskData> QueuedTasks { get; set; }
 
     public async Task WithTransaction(Func<DatabaseContextTransaction, Task> action)
     {

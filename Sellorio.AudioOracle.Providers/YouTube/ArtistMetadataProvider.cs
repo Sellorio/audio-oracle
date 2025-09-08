@@ -11,11 +11,11 @@ internal class ArtistMetadataProvider(IApiService apiService) : IArtistMetadataP
 {
     public string ProviderName => Constants.ProviderName;
 
-    public async Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(string[] ids)
+    public async Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(IList<string> ids)
     {
-        var result = new ArtistMetadata[ids.Length];
+        var result = new ArtistMetadata[ids.Count];
 
-        for (var i = 0; i < ids.Length; i++)
+        for (var i = 0; i < ids.Count; i++)
         {
             var artistId = ids[i];
 

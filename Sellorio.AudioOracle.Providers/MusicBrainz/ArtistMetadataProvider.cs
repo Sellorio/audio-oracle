@@ -21,9 +21,9 @@ internal class ArtistMetadataProvider(HttpClient httpClient) : IArtistMetadataPr
 
     public string ProviderName => Constants.ProviderName;
 
-    public async Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(string[] ids)
+    public async Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(IList<string> ids)
     {
-        var result = new List<ArtistMetadata?>(ids.Length);
+        var result = new List<ArtistMetadata?>(ids.Count);
 
         foreach (var id in ids)
         {

@@ -7,5 +7,5 @@ namespace Sellorio.AudioOracle.Providers;
 
 public interface IArtistMetadataProvider : IProvider
 {
-    Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(string[] ids);
+    Task<ValueResult<IList<ArtistMetadata?>>> GetArtistMetadataAsync(IList<string> ids);
 }

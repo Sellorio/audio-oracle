@@ -8,6 +8,7 @@ using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Services;
 using Sellorio.AudioOracle.Web.Components;
 using Sellorio.AudioOracle.Web.Framework;
+using Sellorio.AudioOracle.Web.TaskQueue;
 
 if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables.AdminPassword)))
 {
@@ -30,6 +31,8 @@ builder.Services
     .AddDbContext<DatabaseContext>()
     .AddAudioOracleServerSideServices()
     ;
+
+builder.Services.AddHostedService<TaskQueueHostedService>();
 
 var app = builder.Build();
 

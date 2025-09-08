@@ -37,7 +37,6 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
             ReleaseDate = release.Date,
             ReleaseYear = (ushort?)release.ReleaseYear,
             Title = release.Title,
-            TrackCount = (ushort)release.TrackCount,
             Tracks =
                 release.Media
                     .SelectMany(x => x.Tracks!)

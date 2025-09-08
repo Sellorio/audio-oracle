@@ -9,68 +9,102 @@ using Sellorio.AudioOracle.Library.Results.Messages;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
+using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
 internal class ArtistCreationService(DatabaseContext databaseContext, IMetadataMapper metadataMapper, IProviderInvocationService providerInvocationService) : IArtistCreationService
 {
-    public async Task<ValueResult<IList<Artist>>> GetOrCreateArtistsAsync(string providerName, IList<ResolvedIds> resolvedIds)
+    public async Task<ValueResult<IList<Artist?>>> GetOrCreateArtistsAsync(IList<ArtistPost> artistPosts)
     {
-        var result = new List<Artist>(resolvedIds.Count);
+        var result = new List<Artist?>(artistPosts.Count);
 
-        var sourceIds = resolvedIds.Select(x => x.SourceId).ToArray();
+        var sourceIds = artistPosts.Select(x => x.SourceId).ToArray();
+        var providerNames = artistPosts.Select(x => x.Source).ToArray();
 
         var existingArtists =
             await databaseContext.Artists
                 .AsNoTracking()
-                .Where(x => x.Source == providerName && sourceIds.Contains(x.SourceId))
-                .ToDictionaryAsync(x => x.SourceId, x => x);
+                .Where(x => providerNames.Contains(x.Source) && sourceIds.Contains(x.SourceId))
+                .ToDictionaryAsync(x => (x.Source, x.SourceId), x => x);
 
-        var missingArtistSourceIds = sourceIds.Where(x => existingArtists.All(y => y.Key != x)).ToArray();
+        var missingArtistPosts = new List<ArtistPost>();
 
-        var missingArtistsMetadataResult =
-            await providerInvocationService.InvokeAsync<IArtistMetadataProvider, IList<ArtistMetadata?>>(
-                providerName,
-                x => x.GetArtistMetadataAsync(missingArtistSourceIds));
-
-        if (missingArtistsMetadataResult.WasSuccess ||
-            missingArtistsMetadataResult.Value!.Any(x => x == null))
+        for (var i = 0; i < artistPosts.Count; i++)
         {
-            return ResultMessage.Error("Failed to retrieve artist metadata from provider.");
+            var artistPost = artistPosts[i];
+
+            if (!existingArtists.TryGetValue((artistPost.Source, artistPost.SourceId), out var existingArtist))
+            {
+                missingArtistPosts.Add(artistPost);
+            }
         }
 
-        foreach (var resolvedId in resolvedIds)
+        var missingArtistPostsGroupedBySource = missingArtistPosts.GroupBy(x => x.Source).ToList();
+
+        var newMetadata = new Dictionary<(string Source, string SourceId), ArtistMetadata?>();
+
+        foreach (var group in missingArtistPostsGroupedBySource)
         {
-            if (existingArtists.TryGetValue(resolvedId.SourceId, out var artistData))
+            var groupIds = group.Select(x => x.SourceId).ToArray();
+
+            var missingArtistsMetadataResult =
+                await providerInvocationService.InvokeAsync<IArtistMetadataProvider, IList<ArtistMetadata?>>(
+                    group.Key,
+                    x => x.GetArtistMetadataAsync(groupIds));
+
+            if (missingArtistsMetadataResult.WasSuccess ||
+                missingArtistsMetadataResult.Value!.Any(x => x == null))
             {
-                result.Add(metadataMapper.Map(artistData));
+                return ResultMessage.Error("Failed to retrieve artist metadata from provider.");
+            }
+
+            for (var i = 0; i < groupIds.Length; i++)
+            {
+                var metadata = missingArtistsMetadataResult.Value[i];
+                newMetadata[(group.Key, groupIds[i])] = metadata;
+            }
+        }
+
+        foreach (var artistPost in artistPosts)
+        {
+            var key = (artistPost.Source, artistPost.SourceId);
+
+            if (existingArtists.TryGetValue(key, out var existingArtist))
+            {
+                result.Add(metadataMapper.Map(existingArtist));
                 continue;
             }
 
-            var indexOfMissingSourceId = missingArtistSourceIds.Index().First(x => x.Item == resolvedId.SourceId).Index;
-            var artistMetadata = missingArtistsMetadataResult.Value![indexOfMissingSourceId];
+            var metadata = newMetadata[key];
 
-            artistData = new()
+            if (metadata == null)
+            {
+                result.Add(null);
+                continue;
+            }
+
+            existingArtist = new()
             {
                 ArtistNames =
                     Enumerable
-                        .Concat([artistMetadata!.Name], artistMetadata.Aliases)
+                        .Concat([metadata!.Name], metadata.Aliases)
                         .Select(x => new ArtistNameData { Name = x })
                         .ToArray(),
-                Country = artistMetadata.Country,
-                CountryCode = artistMetadata.CountryCode,
-                Gender = artistMetadata.Gender,
-                Name = artistMetadata.Name,
-                Source = providerName,
-                SourceId = resolvedId.SourceId,
-                SourceUrlId = resolvedId.SourceUrlId,
-                Type = artistMetadata.Type
+                Country = metadata.Country,
+                CountryCode = metadata.CountryCode,
+                Gender = metadata.Gender,
+                Name = metadata.Name,
+                Source = artistPost.Source,
+                SourceId = artistPost.SourceId,
+                SourceUrlId = artistPost.SourceUrlId,
+                Type = metadata.Type
             };
 
-            databaseContext.Artists.Add(artistData);
+            databaseContext.Artists.Add(existingArtist);
             await databaseContext.SaveChangesAsync();
 
-            result.Add(metadataMapper.Map(artistData));
+            result.Add(metadataMapper.Map(existingArtist));
         }
 
         return result;

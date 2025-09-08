@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using System.Threading.Channels;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sellorio.AudioOracle.Library.DependencyInjection;
+using Sellorio.AudioOracle.Models.TaskQueue;
 using Sellorio.AudioOracle.Providers.MusicBrainz;
 using Sellorio.AudioOracle.Providers.SoundCloud;
 using Sellorio.AudioOracle.Providers.YouTube;
@@ -10,6 +13,9 @@ using Sellorio.AudioOracle.Services.Content;
 using Sellorio.AudioOracle.Services.Metadata;
 using Sellorio.AudioOracle.Services.Search;
 using Sellorio.AudioOracle.Services.Sessions;
+using Sellorio.AudioOracle.Services.TaskQueue;
+using Sellorio.AudioOracle.Services.TaskQueue.Handlers;
+using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
 
 namespace Sellorio.AudioOracle.Services;
 
@@ -17,6 +23,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAudioOracleServerSideServices(this IServiceCollection services)
     {
+
         services
             .AddYouTubeProvider()
             .AddSoundCloudProvider()
@@ -40,6 +47,21 @@ public static class ServiceCollectionExtensions
 
             // Sessions
             .AddScoped<ISessionService, SessionService>()
+
+            // Task Queue
+            .AddSingleton<Channel<QueuedTask>>()
+            .AddSingleton<ITaskQueueService, TaskQueueService>()
+
+            .AddScoped<ITaskQueueMapper, TaskQueueMapper>()
+            .AddScoped<ITaskQueuingService, TaskQueuingService>()
+                
+                // Handlers
+                .AddScoped<ITaskHandler, TrackMetadata>()
+                .AddScoped<ITaskHandler, DownloadTrack>()
+
+                // Queuers
+                .AddScoped<ITrackMetadataTaskQueuingService, TrackMetadataTaskQueuingService>()
+                .AddScoped<IDownloadTrackTaskQueuingService, DownloadTrackTaskQueuingService>()
             ;
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(

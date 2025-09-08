@@ -11,7 +11,7 @@ namespace Sellorio.AudioOracle.Data.Metadata;
 [Index(nameof(SourceId))]
 public class AlbumData
 {
-    public int Id { get; set; }
+    public int Id { get; init; }
 
     public int? AlbumArtId { get; set; }
     public FileInfoData? AlbumArt { get; set; }
@@ -36,6 +36,8 @@ public class AlbumData
     public required DateOnly? ReleaseDate { get; set; }
 
     public required ushort? ReleaseYear { get; set; }
+
+    public required string FolderName { get; set; }
 
     public IList<TrackData>? Tracks { get; set; }
     public IList<AlbumArtistData>? Artists { get; set; }
