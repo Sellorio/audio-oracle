@@ -57,7 +57,11 @@ internal class AlbumCreationService(
                 return ResultMessage.Error("Failed to download album art.");
             }
 
-            var artistsResult = await artistCreationService.GetOrCreateArtistsAsync(searchResult.Source, albumMetadataResult.Value!.ArtistIds);
+            var artistsResult =
+                await artistCreationService.GetOrCreateArtistsAsync(
+                    albumMetadataResult.Value!.ArtistIds
+                        .Select(x => new ArtistPost { Source = searchResult.Source, SourceId = x.SourceId, SourceUrlId = x.SourceUrlId })
+                        .ToArray());
 
             if (!artistsResult.WasSuccess)
             {
@@ -70,7 +74,7 @@ internal class AlbumCreationService(
                 AlbumArtId = fileInfo?.Value!.Id,
                 AlbumArt = fileInfo == null ? null : await databaseContext.FileInfos.FindAsync(fileInfo.Value!.Id),
                 AlternateTitle = searchResult.AlternateAlbumTitle,
-                Artists = artistsResult.Value!.Select(x => new AlbumArtistData { ArtistId = x.Id }).ToArray(),
+                Artists = artistsResult.Value!.Where(x => x != null).Select(x => new AlbumArtistData { ArtistId = x!.Id }).ToArray(),
                 ReleaseDate = albumMetadataResult.Value.ReleaseDate,
                 ReleaseYear = albumMetadataResult.Value.ReleaseYear,
                 Source = searchResult.Source,

@@ -9,8 +9,8 @@ using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers;
+using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.Services.Content;
-using Sellorio.AudioOracle.Services.Metadata;
 using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
 
 namespace Sellorio.AudioOracle.Services.TaskQueue.Handlers;
@@ -79,7 +79,11 @@ internal class TrackMetadata(
             return;
         }
 
-        var artistsResult = await artistCreationService.GetOrCreateArtistsAsync(trackData.MetadataSource, trackMetadata.ArtistIds);
+        var artistsResult =
+            await artistCreationService.GetOrCreateArtistsAsync(
+                trackMetadata.ArtistIds
+                    .Select(x => new ArtistPost { Source = trackData.MetadataSource, SourceId = x.SourceId, SourceUrlId = x.SourceUrlId })
+                    .ToArray());
 
         if (!artistsResult.WasSuccess)
         {
@@ -92,7 +96,7 @@ internal class TrackMetadata(
         trackData.Duration = trackMetadata.Duration;
         trackData.Title = trackMetadata.Title;
         trackData.AlternateTitle = trackMetadata.AlternateTitle;
-        trackData.Artists = artistsResult.Value.Select(x => new TrackArtistData { ArtistId = x.Id }).ToArray();
+        trackData.Artists = artistsResult.Value.Where(x => x != null).Select(x => new TrackArtistData { ArtistId = x!.Id }).ToArray();
 
         if (fileResult != null)
         {
