@@ -1,0 +1,48 @@
+﻿@page "/login"
+@layout Layout.LoginLayout
+@using Sellorio.AudioOracle.ServiceInterfaces.Sessions
+@using Sellorio.AudioOracle.Web.Client.Services
+@inject NavigationManager NavigationManager
+
+<div style="@($"width:100%;max-width:{Library.Constants.MaxFormWidth}")">
+	<AoPanel Title="Login">
+		<AoForm OnValidSubmit="LoginAsync">
+			<AoPasswordField Label="Admin Password" @bind-Value="password" Required />
+			<AoFormButtons>
+				<AoSubmit Label="Login" />
+			</AoFormButtons>
+			<AoResultMessages Result="loginResult" />
+		</AoForm>
+	</AoPanel>
+</div>
+
+@code {
+	string? password;
+	Result? loginResult;
+	bool redirect;
+
+	[CascadingParameter]
+	public required IAuthenticationProvider AuthenticationProvider { get; set; }
+
+	[Parameter]
+	public string? RedirectUrl { get; set; }
+
+	async Task LoginAsync()
+	{
+		loginResult = await AuthenticationProvider.LoginAsync(password!);
+
+		if (loginResult.WasSuccess)
+		{
+			redirect = true;
+		}
+	}
+
+	protected override void OnAfterRender(bool firstRender)
+	{
+		if (redirect)
+		{
+			redirect = false;
+			NavigationManager.NavigateTo(RedirectUrl ?? NavigationManager.BaseUri);
+		}
+	}
+}

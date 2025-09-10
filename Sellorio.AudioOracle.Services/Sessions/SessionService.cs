@@ -6,6 +6,7 @@ using Sellorio.AudioOracle.Data.Sessions;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
 using Sellorio.AudioOracle.Models;
+using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
 
 namespace Sellorio.AudioOracle.Services.Sessions;
 
@@ -122,5 +123,10 @@ internal class SessionService(DatabaseContext databaseContext, SessionState sess
         }
 
         return session;
+    }
+
+    public Task<ValueResult<bool>> IsLoggedInAsync()
+    {
+        return Task.FromResult(ValueResult.Success(sessionState.IsLoggedIn));
     }
 }

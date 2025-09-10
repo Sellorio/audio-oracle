@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Sellorio.AudioOracle.Services.Sessions;
+using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
 
 namespace Sellorio.AudioOracle.Web.Framework;
 

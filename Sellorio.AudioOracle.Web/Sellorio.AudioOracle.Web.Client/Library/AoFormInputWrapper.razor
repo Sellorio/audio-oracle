@@ -1,0 +1,21 @@
+﻿<MudGrid Spacing="2">
+	<MudItem xs="12" md="5">
+		<div class="@($"pt-{LabelSpacing}")">
+			<AoLabel>@Label</AoLabel>
+		</div>
+	</MudItem>
+	<MudItem xs="12" md="7">
+		@ChildContent
+	</MudItem>
+</MudGrid>
+
+@code {
+	[Parameter]
+	public string? Label { get; set; }
+
+	[Parameter]
+	public int LabelSpacing { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

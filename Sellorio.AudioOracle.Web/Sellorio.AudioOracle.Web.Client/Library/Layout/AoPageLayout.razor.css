@@ -1,0 +1,11 @@
+﻿.ao-page-layout {
+    height: 100%;
+}
+
+.ao-page-layout ::deep .mud-layout {
+    height: 100%;
+}
+
+.ao-page-layout ::deep .mud-main-content {
+    height: 100%;
+}

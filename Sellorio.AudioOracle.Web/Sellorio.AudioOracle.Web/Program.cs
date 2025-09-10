@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using MudBlazor.Services;
+using Sellorio.AudioOracle.Client.Sessions;
 using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Services;
+using Sellorio.AudioOracle.Web.Client.Services;
 using Sellorio.AudioOracle.Web.Components;
 using Sellorio.AudioOracle.Web.Framework;
 using Sellorio.AudioOracle.Web.TaskQueue;
@@ -20,11 +23,13 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
+
+builder.Services
+    .AddControllers();
 
 builder.Services
     .AddScoped<AuthorizeFilter>()
@@ -33,6 +38,11 @@ builder.Services
     ;
 
 builder.Services.AddHostedService<TaskQueueHostedService>();
+builder.Services.AddScoped<AuthenticationStateProvider>();
+builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.AuthenticationStateProvider>(svc => svc.GetRequiredService<AuthenticationStateProvider>());
+builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
+builder.Services.AddScoped<IAudioOracleSessionTokenProvider, SessionTokenProvider>();
+builder.Services.AddMudServices();
 
 var app = builder.Build();
 
@@ -53,6 +63,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
+app.MapControllers();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()

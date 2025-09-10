@@ -80,17 +80,23 @@ internal class ResultJsonConverter : JsonConverter<IResult?>
             forValueResult1: () =>
                 result =
                     (IResult)(serialisableResult.Messages!.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound)
-                        ? resultType.GetMethod(nameof(ValueResult<object>.Failure), BindingFlags.Static | BindingFlags.Public)!
+                        ? resultType.GetMethod(nameof(ValueResult<object>.Failure), BindingFlags.Static | BindingFlags.Public, [typeof(ResultMessage[])])!
                             .Invoke(null, [serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()])
-                        : resultType.GetMethod(nameof(ValueResult<object>.Success), BindingFlags.Static | BindingFlags.Public)!
-                            .Invoke(null, [value, serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()]))!,
+                        : resultType.GetMethod(
+                            nameof(ValueResult<object>.Success),
+                            BindingFlags.Static | BindingFlags.Public,
+                            [resultType.GetGenericArguments()[0], typeof(ResultMessage[])])!
+                                .Invoke(null, [value, serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()]))!,
             forValueResult2: () =>
                 result =
                     (IResult)(serialisableResult.Messages!.Any(x => x.Severity is ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound)
-                        ? resultType.GetMethod(nameof(ValueResult<object, object>.Failure), BindingFlags.Static | BindingFlags.Public)!
+                        ? resultType.GetMethod(nameof(ValueResult<object, object>.Failure), BindingFlags.Static | BindingFlags.Public, [typeof(ResultMessage[])])!
                             .Invoke(null, [serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()])
-                        : resultType.GetMethod(nameof(ValueResult<object, object>.Success), BindingFlags.Static | BindingFlags.Public)!
-                            .Invoke(null, [value, serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()]))!);
+                        : resultType.GetMethod(
+                            nameof(ValueResult<object, object>.Success),
+                            BindingFlags.Static | BindingFlags.Public,
+                            [resultType.GetGenericArguments()[1], typeof(ResultMessage[])])!
+                                .Invoke(null, [value, serialisableResult.Messages!.Select(ConvertFromSerialisable).ToArray()]))!);
 
         return result ?? throw new InvalidOperationException("Failed to create result.");
     }

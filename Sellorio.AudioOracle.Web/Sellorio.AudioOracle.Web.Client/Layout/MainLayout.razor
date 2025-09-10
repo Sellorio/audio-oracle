@@ -1,14 +1,22 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<AoPageLayout>
+    <NavContent>
+        <AoNavItem Href="/albums" Label="Albums" />
+        <AoNavSeparator />
+        <AoNavItem Href="/albums" Label="Albums" />
+    </NavContent>
+    <ChildContent>
+        <AoCenter Horizontal>
+            <div style="width:100%;max-width:1600px">
+                @Body
+            </div>
+        </AoCenter>
+    </ChildContent>
+</AoPageLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
-
-<MudThemeProvider />
-<MudPopoverProvider />
-<MudDialogProvider />
-<MudSnackbarProvider />

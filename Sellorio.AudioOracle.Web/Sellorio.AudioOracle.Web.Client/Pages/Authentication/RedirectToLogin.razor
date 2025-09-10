@@ -1,0 +1,11 @@
+﻿@using System.Net
+@inject NavigationManager NavigationManager
+
+Redirect to login
+
+@code {
+	protected override void OnInitialized()
+	{
+		NavigationManager.NavigateTo(NavigationManager.BaseUri + "login?redirectUrl=" + WebUtility.UrlEncode(NavigationManager.Uri));
+	}
+}

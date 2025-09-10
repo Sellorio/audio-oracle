@@ -1,6 +1,4 @@
-﻿using System;
-using System.Linq;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Sellorio.AudioOracle.Client.Internal;
 using Sellorio.AudioOracle.Client.Metadata;
 using Sellorio.AudioOracle.Client.Search;
@@ -14,25 +12,26 @@ namespace Sellorio.AudioOracle.Client;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAudioOracleClientSideServices<TSessionTokenProvider>(this IServiceCollection services)
+    public static IServiceCollection AddAudioOracleClientSideServices<TSessionTokenProvider>(this IServiceCollection services, string baseAddress)
         where TSessionTokenProvider : class, IAudioOracleSessionTokenProvider
     {
         const string clientName = "AORestHttpClient";
 
-        services.AddScoped<IAudioOracleSessionTokenProvider, TSessionTokenProvider>();
-        services.AddHttpClient(clientName, o => o.BaseAddress = new System.Uri("api"));
+        services.AddSingleton<IAudioOracleSessionTokenProvider, TSessionTokenProvider>();
+        services.AddHttpClient(clientName, o => o.BaseAddress = new System.Uri(baseAddress + "api/"));
 
         // Metadata
         services.TryAddRestClient<IAlbumService, AlbumService>(clientName);
         services.TryAddRestClient<IAlbumCreationService, AlbumCreationService>(clientName);
+        services.TryAddRestClient<IArtistCreationService, ArtistCreationService>(clientName);
 
         // Search
         services.TryAddRestClient<ISearchService, SearchService>(clientName);
 
         // Sessions
-        services.TryAddRestClient<IAuthenticationService, AuthenticationService>(clientName);
+        services.TryAddRestClient<ISessionService, SessionService>(clientName);
 
-        ServiceRegistrationHelper.EnsureAllServicesAreRegistered(services, [typeof(IAuthenticationService).Assembly]);
+        ServiceRegistrationHelper.EnsureAllServicesAreRegistered(services, [typeof(ISessionService).Assembly]);
 
         return services;
     }

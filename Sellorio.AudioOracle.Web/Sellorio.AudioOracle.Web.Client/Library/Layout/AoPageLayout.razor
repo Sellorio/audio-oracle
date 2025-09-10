@@ -1,0 +1,28 @@
+﻿<div class="ao-page-layout">
+	<MudLayout>
+		<MudAppBar>
+			Audio Oracle
+		</MudAppBar>
+
+		@if (NavContent != null)
+		{
+			<MudDrawer Open>
+				<MudNavMenu>
+					@NavContent
+				</MudNavMenu>
+			</MudDrawer>
+		}
+
+		<MudMainContent>
+			@ChildContent
+		</MudMainContent>
+	</MudLayout>
+</div>
+
+@code {
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? NavContent { get; set; }
+}

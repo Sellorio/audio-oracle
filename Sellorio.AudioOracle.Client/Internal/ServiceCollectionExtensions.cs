@@ -54,7 +54,7 @@ internal static class ServiceCollectionExtensions
 
         var constructor = constructors[0];
 
-        services.AddScoped<TInterface>(svc =>
+        services.AddSingleton<TInterface>(svc =>
         {
             var httpClientFactory = svc.GetRequiredService<IHttpClientFactory>();
             var httpClient = httpClientFactory.CreateClient(httpClientName);

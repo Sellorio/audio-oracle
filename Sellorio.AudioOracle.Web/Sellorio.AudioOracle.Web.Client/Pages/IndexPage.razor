@@ -1,0 +1,10 @@
+﻿@page "/"
+@using Sellorio.AudioOracle.Client.Sessions
+@inject NavigationManager NavigationManager
+
+@code {
+	protected override void OnInitialized()
+	{
+		NavigationManager.NavigateTo(NavigationManager.BaseUri + "albums");
+	}
+}

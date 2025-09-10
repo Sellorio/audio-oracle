@@ -49,7 +49,7 @@ public static class ServiceCollectionExtensions
             .AddScoped<ISessionService, SessionService>()
 
             // Task Queue
-            .AddSingleton<Channel<QueuedTask>>()
+            .AddSingleton(Channel.CreateUnbounded<QueuedTask>())
             .AddSingleton<ITaskQueueService, TaskQueueService>()
 
             .AddScoped<ITaskQueueMapper, TaskQueueMapper>()
@@ -66,7 +66,7 @@ public static class ServiceCollectionExtensions
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(
             services,
-            [typeof(IAuthenticationService).Assembly, typeof(ServiceCollectionExtensions).Assembly]);
+            [typeof(ISessionService).Assembly, typeof(ServiceCollectionExtensions).Assembly]);
 
         return services;
     }

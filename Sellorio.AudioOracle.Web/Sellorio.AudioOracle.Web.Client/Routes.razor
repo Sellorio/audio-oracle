@@ -1,6 +1,91 @@
-﻿<Router AppAssembly="typeof(Program).Assembly">
-    <Found Context="routeData">
-        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
-        <FocusOnNavigate RouteData="routeData" Selector="h1" />
-    </Found>
-</Router>
+﻿@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Sellorio.AudioOracle.Client.Sessions
+@using Sellorio.AudioOracle.ServiceInterfaces.Sessions
+@using Sellorio.AudioOracle.Web.Client.Library.Providers
+@using Sellorio.AudioOracle.Web.Client.Pages.Authentication
+@using Sellorio.AudioOracle.Web.Client.Services
+@inject IJSRuntime JSRuntime
+@inject ISessionService SessionService
+@inject IAudioOracleSessionTokenProvider SessionTokenProvider
+@inject Services.AuthenticationStateProvider AuthenticationStateProvider
+
+<CascadingValue TValue="IAuthenticationProvider" Value="authenticationProvider!" IsFixed>
+    <AoDisableStateProvider>
+        <CascadingAuthenticationState>
+            <Router AppAssembly="typeof(Program).Assembly">
+                <Found Context="routeData">
+                    @{
+                        var requiresAuthentication = routeData.PageType != typeof(Pages.Authentication.LoginPage);
+                    }
+
+                    @if (!requiresAuthentication)
+                    {
+                        <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                    }
+                    else if (!isInteractive)
+                    {
+                        <AoLoader />
+                    }
+                    else
+                    {
+                        <AuthorizeView>
+                            <Authorized>
+                                <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                            </Authorized>
+                            <Authorizing>
+                                <AoLoader />
+                            </Authorizing>
+                            <NotAuthorized>
+                                <RedirectToLogin />
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    }
+
+                    <FocusOnNavigate RouteData="routeData" Selector="h1" />
+                </Found>
+            </Router>
+        </CascadingAuthenticationState>
+    </AoDisableStateProvider>
+
+    <AoPopupProvider />
+</CascadingValue>
+
+@code {
+    bool isInteractive = false;
+    IAuthenticationProvider? authenticationProvider;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authenticationProvider = new AuthenticationProvider(SessionService, SessionTokenProvider, AuthenticationStateProvider);
+
+        if (JSRuntime is IJSInProcessRuntime)
+        {
+            isInteractive = true;
+            await InitializeApplicationAsync(isServerSide: false);
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !isInteractive)
+        {
+            isInteractive = true;
+            await InitializeApplicationAsync(isServerSide: true);
+            StateHasChanged();
+        }
+    }
+
+    private async Task InitializeApplicationAsync(bool isServerSide)
+    {
+        if (isServerSide)
+        {
+            var savedToken = await SessionTokenProvider.GetSessionTokenAsync();
+
+            if (savedToken != null)
+            {
+                await SessionService.UseSessionAsync(savedToken);
+            }
+        }
+    }
+}
