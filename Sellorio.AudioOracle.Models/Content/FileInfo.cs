@@ -6,4 +6,5 @@ public class FileInfo
     public required string UrlId { get; init; }
     public required FileType Type { get; init; }
     public required int Size { get; init; }
+    public required FileContent? Content { get; init; }
 }

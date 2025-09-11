@@ -30,8 +30,10 @@
                     else
                     {
                         <AuthorizeView>
-                            <Authorized>
+                        <Authorized>
+                            <CatchUnauthorizedAndRedirectToLogin>
                                 <RouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)" />
+                            </CatchUnauthorizedAndRedirectToLogin>
                             </Authorized>
                             <Authorizing>
                                 <AoLoader />
@@ -49,6 +51,7 @@
     </AoDisableStateProvider>
 
     <AoPopupProvider />
+    <AoThemeProvider />
 </CascadingValue>
 
 @code {

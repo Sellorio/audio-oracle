@@ -1,0 +1,86 @@
+﻿@page "/albums/add"
+@using Sellorio.AudioOracle.Models.Search
+@using Sellorio.AudioOracle.ServiceInterfaces.Search
+@using System.Web
+@inject ISearchService SearchService
+
+You are on search!
+
+<AoForm OnValidSubmit="SearchAsync">
+	<AoTextField Label="Search" @bind-Value="searchText" Required MaxLength="200" /> 
+</AoForm>
+
+<AoBoxLoader Loading="isLoading">
+	@if (searchResult == null)
+	{
+		<AoInformation Message="Use the search above to search for an album/track using the available providers." />
+	}
+	else if (searchResult.WasSuccess)
+	{
+		if (searchResult.Value!.Count == 0)
+		{
+			<AoInformation Message="No results were found for the given search." />
+		}
+		else
+		{
+			<AoGridList ClickableRows>
+				<thead>
+					<tr>
+						<th>Art</th>
+						<th>Title</th>
+						<th>Album</th>
+						<th>Artists</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var i in searchResult.Value)
+					{
+						var item = i;
+
+						<tr @onclick="() => SelectSearchResultAsync(item)">
+							<td>
+								@if (item.AlbumArtUrl != null)
+								{
+									<img src="@($"/pf?url={HttpUtility.UrlEncode(item.AlbumArtUrl)}")">
+								}
+							</td>
+							<td>@item.Title</td>
+							<td>@item.AlbumTitle</td>
+							<td>
+								@if (item.ArtistNames != null)
+								{
+									@string.Join(", ", item.ArtistNames)
+								}
+							</td>
+						</tr>
+					}
+				</tbody>
+			</AoGridList>
+		}
+	}
+</AoBoxLoader>
+
+@code {
+	string? searchText;
+	ValueResult<IList<SearchResult>>? searchResult;
+	bool isLoading;
+
+	async Task SearchAsync()
+	{
+		isLoading = true;
+
+		try
+		{
+			searchResult = await SearchService.SearchAsync(searchText!);
+		}
+		finally
+		{
+			isLoading = false;
+		}
+	}
+
+	Task SelectSearchResultAsync(SearchResult item)
+	{
+		return Task.CompletedTask;
+	}
+}

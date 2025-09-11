@@ -1,0 +1,11 @@
+﻿<MudSimpleTable>
+	@ChildContent
+</MudSimpleTable>
+
+@code {
+	[Parameter]
+	public bool ClickableRows { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

@@ -1,13 +1,10 @@
-﻿@using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
+﻿@inherits Base.AoDisableComponent
 
 <span class="ao-text-input">
-	<MudTextField T="string" Value="@Value" ValueChanged="OnValueChanged" Required="Required" MaxLength="MaxLength" Disabled="Disabled || DisableStateScope.IsDisabled" />
+	<MudTextField T="string" Value="@Value" ValueChanged="OnValueChanged" Required="Required" MaxLength="MaxLength" Disabled="DisableContent" />
 </span>
 
 @code {
-	[CascadingParameter]
-	public required IDisableStateScope DisableStateScope { get; set; }
-
 	[Parameter]
 	public string? Value { get; set; }
 
@@ -19,9 +16,6 @@
 
 	[Parameter]
 	public int MaxLength { get; set; } = 524288;
-
-	[Parameter]
-	public bool Disabled { get; set; }
 
 	private async Task OnValueChanged(string? newValue)
 	{

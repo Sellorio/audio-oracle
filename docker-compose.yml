@@ -9,7 +9,4 @@ services:
     ports:
       - "27572:80"
     volumes:
-      - "data:/data"
-
-volumes:
-  data: 
+      - "./temp/data:/data"

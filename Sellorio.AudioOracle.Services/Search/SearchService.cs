@@ -46,7 +46,8 @@ internal class SearchService(DatabaseContext databaseContext, IProviderInvocatio
                             ? SearchResultStatus.Completed // support for InProgress is not a priority
                             : SearchResultStatus.NotAdded,
                     Title = providerResult.Title,
-                    Type = providerResult.Type
+                    Type = providerResult.Type,
+                    ArtistNames = providerResult.ArtistNames
                 });
             }
         }

@@ -3,7 +3,9 @@ using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Content;
 
 namespace Sellorio.AudioOracle.Services.Content;
-internal interface IFileService
+
+public interface IFileService
 {
     Task<ValueResult<FileInfo>> CreateFileFromUrlAsync(string url, params FileType[] acceptedTypes);
+    Task<ValueResult<FileInfo>> GetByUrlIdAsync(string urlId);
 }

@@ -60,6 +60,20 @@ internal class FileService(HttpClient httpClient, DatabaseContext databaseContex
         return contentMapper.Map(fileInfoData);
     }
 
+    public async Task<ValueResult<FileInfo>> GetByUrlIdAsync(string urlId)
+    {
+        var data = await databaseContext.FileInfos.AsNoTracking().Include(x => x.Content).SingleOrDefaultAsync(x => x.UrlId == urlId);
+
+        if (data == null)
+        {
+            return ResultMessage.NotFound("File");
+        }
+
+        var model = contentMapper.Map(data);
+
+        return model;
+    }
+
     private async Task<string> GenerateFileUrlIdAsync()
     {
         const string characters = "abcdefghijklmnopqrstuvwxyz1234567890";

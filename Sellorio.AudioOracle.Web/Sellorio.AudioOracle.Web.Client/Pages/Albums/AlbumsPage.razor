@@ -1,7 +1,37 @@
 ﻿@page "/albums"
+@using Sellorio.AudioOracle.Library.Results.Messages
+@using Sellorio.AudioOracle.Models.Metadata
+@using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@inject IAlbumService AlbumService
 
-Arrived at albums page
+<PageLoadWrapper Result="albumsResult">
+	<AoTiles>
+		@if (albumsResult!.Value.Count == 0)
+		{
+			<AoInformation Message="There are no albums. Navigate to Add Album to start adding some!" />
+		}
+
+		@foreach (var album in albumsResult.Value)
+		{
+			<AoVerticalTile
+				Title="@album.Title"
+				ImageSrc="@($"/f/{album.AlbumArt.UrlId}")"
+				Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
+				OnClick="AlbumClickedAsync" />
+		}
+	</AoTiles>
+</PageLoadWrapper>
 
 @code {
+	ValueResult<IList<Album>>? albumsResult;
 
+	protected override async Task OnInitializedAsync()
+	{
+		albumsResult = await AlbumService.GetAlbumsAsync(AlbumFields.Artists);
+	}
+
+	Task AlbumClickedAsync()
+	{
+		return Task.CompletedTask;
+	}
 }

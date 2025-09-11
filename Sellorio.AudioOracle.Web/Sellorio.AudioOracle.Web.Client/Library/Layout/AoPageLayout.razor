@@ -1,7 +1,20 @@
-﻿<div class="ao-page-layout">
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Sellorio.AudioOracle.Web.Client.Services
+@inject NavigationManager NavigationManager
+
+<div class="ao-page-layout">
 	<MudLayout>
 		<MudAppBar>
-			Audio Oracle
+			<MudGrid Spacing="0">
+				<MudItem Style="flex-grow:1">
+					<AoHeading1>Audio Oracle</AoHeading1>
+				</MudItem>
+				<MudItem>
+					<AuthorizeView>
+						<AoButton Secondary Label="Logout" OnClick="LogoutAsync" />
+					</AuthorizeView>
+				</MudItem>
+			</MudGrid>
 		</MudAppBar>
 
 		@if (NavContent != null)
@@ -20,9 +33,22 @@
 </div>
 
 @code {
+	[CascadingParameter]
+	public required IAuthenticationProvider AuthenticationProvider { get; set; }
+
 	[Parameter]
 	public RenderFragment? ChildContent { get; set; }
 
 	[Parameter]
 	public RenderFragment? NavContent { get; set; }
+
+	async Task LogoutAsync()
+	{
+		var logoutResult = await AuthenticationProvider.LogoutAsync();
+
+		if (logoutResult.WasSuccess)
+		{
+			NavigationManager.NavigateTo(NavigationManager.BaseUri);
+		}
+	}
 }

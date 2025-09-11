@@ -1,0 +1,60 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudButton Variant="GetButtonVariant()" Color="GetButtonColor()" ButtonType="ButtonType.Button" Disabled="DisableContent || isExecuting || Loading" OnClick="OnClick">
+	@Label
+
+	@if (isExecuting || Loading)
+	{
+		<MudProgressCircular Size="Size.Small" Indeterminate Style="margin-left:10px" />
+	}
+</MudButton>
+
+@code {
+	bool isExecuting;
+
+	[Parameter]
+	public string? Label { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+
+	[Parameter]
+	public bool Primary { get; set; }
+
+	[Parameter]
+	public bool Secondary { get; set; }
+
+	[Parameter]
+	public bool Green { get; set; }
+
+	[Parameter]
+	public bool Yellow { get; set; }
+
+	[Parameter]
+	public bool Red { get; set; }
+
+	[Parameter]
+	public bool Loading { get; set; }
+
+	async Task HandleClick()
+	{
+		isExecuting = true;
+		await OnClick.InvokeAsync();
+		isExecuting = false;
+	}
+
+	private Color GetButtonColor()
+	{
+		if (Primary) return Color.Primary;
+		if (Secondary) return Color.Secondary;
+		if (Green) return Color.Success;
+		if (Yellow) return Color.Warning;
+		if (Red) return Color.Error;
+		return Color.Default;
+	}
+
+	private Variant GetButtonVariant()
+	{
+		return Variant.Filled;
+	}
+}

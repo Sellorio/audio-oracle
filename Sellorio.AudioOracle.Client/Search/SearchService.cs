@@ -11,6 +11,6 @@ internal class SearchService(IRestClient restClient) : ISearchService
 {
     public async Task<ValueResult<IList<SearchResult>>> SearchAsync(string searchText)
     {
-        return await restClient.Post($"/api/search{new { searchText }}").ToValueResult<IList<SearchResult>>();
+        return await restClient.Post($"/search{new { searchText }}").ToValueResult<IList<SearchResult>>();
     }
 }

@@ -1,0 +1,21 @@
+﻿@if (Result == null)
+{
+	<AoLoader />
+}
+else
+{
+	<AoResultMessages Result="Result" />
+
+	if (Result.WasSuccess)
+	{
+		@ChildContent
+	}
+}
+
+@code {
+	[Parameter]
+	public IResult? Result { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

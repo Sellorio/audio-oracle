@@ -1,4 +1,6 @@
-﻿namespace Sellorio.AudioOracle.Models.Search;
+﻿using System.Collections.Generic;
+
+namespace Sellorio.AudioOracle.Models.Search;
 
 public class SearchResult
 {
@@ -13,6 +15,7 @@ public class SearchResult
     public required string AlbumTitle { get; init; }
     public required string? AlternateAlbumTitle { get; init; }
     public required string? AlbumArtUrl { get; init; }
+    public required IList<string>? ArtistNames { get; init; }
 
     public SearchResultStatus Status { get; set; }
 }

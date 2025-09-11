@@ -26,7 +26,7 @@ internal class BrowseService(IApiService apiService) : IBrowseService
     {
         var response = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId });
         var contents = response["contents"] ?? throw new InvalidOperationException("Unable to parse browse page.");
-        var playlistId = contents["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!["contents"]![0]!["musicShelfRenderer"]!["contents"]!["musicResponsiveListItemRenderer"]!["overlay"]!["musicItemThumbnailOverlayRenderer"]!["content"]!["musicPlayButtonRenderer"]!["playNavigationEndpoint"]!["watchEndpoint"]!.Get<string>("playlistId")!;
+        var playlistId = contents["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!["contents"]![0]!["musicShelfRenderer"]!["contents"]![0]!["musicResponsiveListItemRenderer"]!["overlay"]!["musicItemThumbnailOverlayRenderer"]!["content"]!["musicPlayButtonRenderer"]!["playNavigationEndpoint"]!["watchEndpoint"]!.Get<string>("playlistId")!;
         return playlistId;
     }
 }

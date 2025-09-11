@@ -1,0 +1,46 @@
+﻿@inherits Base.AoDisableComponent
+
+<div class="@("ao-vertical-tile" + (!DisableContent && OnClick.HasDelegate ? " clickable" : ""))" @onclick="OnClick" tabindex="@(DisableContent ? "-1" : "0")">
+	<MudPaper>
+		@if (Title != null)
+		{
+			<div class="title">
+				<AoAutoFitText Content="@Title" />
+			</div>
+		}
+
+		@if (ImageSrc != null)
+		{
+			<img class="image" src="@ImageSrc" alt="Tile Image">
+		}
+
+		@if (Content != null)
+		{
+			<div class="content">@Content</div>
+		}
+
+		@if (ActionsContent != null)
+		{
+			<div class="actions">
+				@ActionsContent
+			</div>
+		}
+	</MudPaper>
+</div>
+
+@code {
+	[Parameter]
+	public string? Title { get; set; }
+
+	[Parameter]
+	public string? ImageSrc { get; set; }
+
+	[Parameter]
+	public string? Content { get; set; }
+
+	[Parameter]
+	public RenderFragment? ActionsContent { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+}
