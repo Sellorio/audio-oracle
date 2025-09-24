@@ -1,4 +1,15 @@
-﻿.ao-tiles {
+﻿.ao-tiles .content {
     display: flex;
     flex-wrap: wrap;
+    margin: calc(var(--tiles-spacing) * -1);
+}
+
+.ao-tiles .content ::deep > * {
+    margin: var(--tiles-spacing);
+}
+
+@media (max-width: 599px) {
+    .ao-tiles {
+        justify-content: center;
+    }
 }

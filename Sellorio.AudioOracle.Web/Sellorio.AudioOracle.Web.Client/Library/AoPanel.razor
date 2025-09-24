@@ -1,15 +1,17 @@
-﻿<MudCard Square="Constants.Square">
-	@if (Title != null)
-	{
-		<MudCardHeader>
-			<AoHeading3>@Title</AoHeading3>
-		</MudCardHeader>
-	}
+﻿<div class="ao-panel">
+	<MudCard Square="Constants.Square">
+		@if (Title != null)
+		{
+			<MudCardHeader>
+				<AoHeading3>@Title</AoHeading3>
+			</MudCardHeader>
+		}
 	
-	<MudCardContent>
-		@ChildContent
-	</MudCardContent>
-</MudCard>
+		<MudCardContent>
+			@ChildContent
+		</MudCardContent>
+	</MudCard>
+</div>
 
 @code {
 	[Parameter]

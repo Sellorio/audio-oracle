@@ -1,0 +1,90 @@
+﻿@page "/albums/{Id:int}"
+@using Sellorio.AudioOracle.Models.Metadata
+@using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@inject IAlbumService AlbumService
+
+<PageLoadWrapper Result="albumResult">
+	<AoBoxLoader Loading="isLoading">
+		<AoColumns>
+			<AoColumn Weight="1">
+				<AoPanel Title="Details">
+					<img class="album-art" alt="Album Art" src="@("/f/" + albumResult!.Value.AlbumArt.UrlId)">
+
+					<AoTextField Label="Title" Value="@albumResult.Value.Title" Disabled />
+					<AoTextField Label="Artists" Value="@string.Join("; ", albumResult.Value.Artists.Select(x => x.Name))" Disabled />
+
+					@if (albumResult.Value.ReleaseDate != null)
+					{
+						<AoTextField Label="Released" Value="@albumResult.Value.ReleaseDate.Value.ToShortDateString()" Disabled />
+					}
+					else if (albumResult.Value.ReleaseYear != null)
+					{
+						<AoTextField Label="Released" Value="@albumResult.Value.ReleaseYear.ToString()" Disabled />
+					}
+
+					<AoTextField Label="Track Count" Value="@albumResult.Value.TrackCount.ToString()" Disabled />
+				</AoPanel>
+				<AoPanel Title="Actions">
+					<AoButton Red Label="Delete" />
+
+					@if (albumResult!.Value.Tracks.Any(x => x.Status is TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed))
+					{
+						<AoButton Primary Label="Retry All" />
+					}
+				</AoPanel>
+			</AoColumn>
+			<AoColumn Weight="1">
+				<AoPanel Title="Tracks">
+					<AoGridList>
+						<thead>
+							<tr>
+								<th>#</th>
+								<th>Title</th>
+								<th>Alt. Title</th>
+								<th>Duration</th>
+								<th>Status</th>
+								<th>Requested</th>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var track in albumResult!.Value.Tracks.OrderBy(x => x.TrackNumber))
+							{
+								<tr>
+									<td>@track.TrackNumber</td>
+									<td>@track.Title</td>
+									<td>@track.AlternateTitle</td>
+									<td>@(track.Duration == null ? null : $"{(int)track.Duration.Value.TotalMinutes}:{track.Duration.Value.Seconds}")</td>
+									<td>
+										@track.Status
+
+										@if (track.StatusText != null)
+										{
+											<br>
+											@track.StatusText
+										}
+									</td>
+									<td>@track.IsRequested</td>
+								</tr>
+							}
+						</tbody>
+					</AoGridList>
+				</AoPanel>
+			</AoColumn>
+		</AoColumns>
+	</AoBoxLoader>
+</PageLoadWrapper>
+
+@code {
+	bool isLoading = true;
+	ValueResult<Album>? albumResult;
+
+	[Parameter]
+	public int Id { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		isLoading = true;
+		albumResult = await AlbumService.GetAlbumAsync(Id, AlbumFields.Artists | AlbumFields.Tracks);
+		isLoading = false;
+	}
+}

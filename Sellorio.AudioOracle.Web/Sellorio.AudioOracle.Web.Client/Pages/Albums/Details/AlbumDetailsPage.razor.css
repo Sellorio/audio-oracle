@@ -1,0 +1,4 @@
+﻿.album-art {
+    width: calc(100% - 16px);
+    margin: 0 8px 30px;
+}

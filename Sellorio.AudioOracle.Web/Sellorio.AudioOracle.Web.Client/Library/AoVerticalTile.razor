@@ -1,31 +1,33 @@
 ﻿@inherits Base.AoDisableComponent
 
-<div class="@("ao-vertical-tile" + (!DisableContent && OnClick.HasDelegate ? " clickable" : ""))" @onclick="OnClick" tabindex="@(DisableContent ? "-1" : "0")">
-	<MudPaper>
-		@if (Title != null)
-		{
-			<div class="title">
-				<AoAutoFitText Content="@Title" />
-			</div>
-		}
+<div class="ao-vertical-tile">
+	<ClickableElement Href="@Href" OnClick="OnClick" Disabled="DisableContent">
+		<MudPaper>
+			@if (Title != null)
+			{
+				<div class="title">
+					<AoAutoFitText Content="@Title" />
+				</div>
+			}
 
-		@if (ImageSrc != null)
-		{
-			<img class="image" src="@ImageSrc" alt="Tile Image">
-		}
+			@if (ImageSrc != null)
+			{
+				<img class="image" src="@ImageSrc" alt="Tile Image">
+			}
 
-		@if (Content != null)
-		{
-			<div class="content">@Content</div>
-		}
+			@if (Content != null)
+			{
+				<div class="content">@Content</div>
+			}
 
-		@if (ActionsContent != null)
-		{
-			<div class="actions">
-				@ActionsContent
-			</div>
-		}
-	</MudPaper>
+			@if (ActionsContent != null)
+			{
+				<div class="actions">
+					@ActionsContent
+				</div>
+			}
+		</MudPaper>
+	</ClickableElement>
 </div>
 
 @code {
@@ -37,6 +39,9 @@
 
 	[Parameter]
 	public string? Content { get; set; }
+
+	[Parameter]
+	public string? Href { get; set; }
 
 	[Parameter]
 	public RenderFragment? ActionsContent { get; set; }

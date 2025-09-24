@@ -12,10 +12,11 @@ using Sellorio.AudioOracle.Models.Content;
 
 namespace Sellorio.AudioOracle.Services.Content;
 
-internal class FileService(HttpClient httpClient, DatabaseContext databaseContext, IContentMapper contentMapper) : IFileService
+internal class FileService(IHttpClientFactory httpClientFactory, DatabaseContext databaseContext, IContentMapper contentMapper) : IFileService
 {
     public async Task<ValueResult<FileInfo>> CreateFileFromUrlAsync(string url, params FileType[] acceptedTypes)
     {
+        var httpClient = httpClientFactory.CreateClient("NoSSL");
         var responseMessage = await httpClient.GetAsync(url);
 
         if (!responseMessage.IsSuccessStatusCode)

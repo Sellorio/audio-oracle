@@ -50,7 +50,7 @@ internal class AlbumCreationService(
 
         var result = await databaseContext.WithTransaction<ValueResult<Album>>(async databaseContextTransaction =>
         {
-            var fileInfo = albumPost.SearchResult.AlbumArtUrl == null ? null : await fileService.CreateFileFromUrlAsync(albumPost.SearchResult.AlbumArtUrl);
+            var fileInfo = albumMetadataResult.Value.AlbumArtUrl == null ? null : await fileService.CreateFileFromUrlAsync(albumMetadataResult.Value.AlbumArtUrl);
 
             if (fileInfo != null && !fileInfo.WasSuccess)
             {

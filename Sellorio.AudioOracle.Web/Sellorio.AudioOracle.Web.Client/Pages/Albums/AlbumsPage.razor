@@ -5,21 +5,23 @@
 @inject IAlbumService AlbumService
 
 <PageLoadWrapper Result="albumsResult">
-	<AoTiles>
-		@if (albumsResult!.Value.Count == 0)
-		{
-			<AoInformation Message="There are no albums. Navigate to Add Album to start adding some!" />
-		}
-
-		@foreach (var album in albumsResult.Value)
-		{
-			<AoVerticalTile
-				Title="@album.Title"
-				ImageSrc="@($"/f/{album.AlbumArt.UrlId}")"
-				Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
-				OnClick="AlbumClickedAsync" />
-		}
-	</AoTiles>
+	@if (albumsResult!.Value.Count == 0)
+	{
+		<AoInformation Message="There are no albums. Navigate to Add Album to start adding some!" />
+	}
+	else
+	{
+		<AoTiles>
+			@foreach (var album in albumsResult.Value)
+			{
+				<AoVerticalTile
+					Title="@album.Title"
+					ImageSrc="@($"/f/{album.AlbumArt.UrlId}")"
+					Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
+					Href="@($"/albums/{album.Id}")" />
+			}
+		</AoTiles>
+	}
 </PageLoadWrapper>
 
 @code {

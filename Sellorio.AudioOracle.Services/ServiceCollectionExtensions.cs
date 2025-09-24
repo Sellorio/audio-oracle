@@ -1,4 +1,5 @@
-﻿using System.Threading.Channels;
+﻿using System.Net.Http;
+using System.Threading.Channels;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Sellorio.AudioOracle.Library.DependencyInjection;
@@ -23,6 +24,9 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddAudioOracleServerSideServices(this IServiceCollection services)
     {
+        services
+            .AddHttpClient("NoSSL")
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });
 
         services
             .AddYouTubeProvider()

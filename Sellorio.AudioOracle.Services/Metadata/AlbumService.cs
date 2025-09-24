@@ -104,13 +104,11 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
 
         if (fields.HasFlag(AlbumFields.Tracks))
         {
+            query = query.Include(x => x.Tracks)!.ThenInclude(x => x.AlbumArtOverride);
+
             if (fields.HasFlag(AlbumFields.Artists))
             {
                 query = query.Include(x => x.Tracks)!.ThenInclude(x => x.Artists)!.ThenInclude(x => x.Artist);
-            }
-            else
-            {
-                query = query.Include(x => x.Tracks);
             }
         }
 

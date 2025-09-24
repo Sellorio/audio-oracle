@@ -11,7 +11,7 @@ using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
 
-internal class AlbumMetadataProvider(IApiService apiService, IBrowseService browseService, ITrackIdsResolver trackIdsResolver) : IAlbumMetadataProvider, IYouTubeAlbumMetadataProvider
+internal class AlbumMetadataProvider(IApiService apiService, IBrowseService browseService) : IAlbumMetadataProvider, IYouTubeAlbumMetadataProvider
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.MaxValue;
@@ -37,7 +37,6 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
         var albumInfoSection = contents["twoColumnBrowseResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["sectionListRenderer"]!["contents"]![0]!["musicResponsiveHeaderRenderer"]!;
 
         var playlistType = albumInfoSection["subtitle"]!["runs"]![0]!.Get<string>("text");
-        var shouldResolveTrackIds = playlistType == "Playlist"; // not "Album"
 
         var albumArt = albumInfoSection["thumbnail"]!["musicThumbnailRenderer"]!["thumbnail"]!["thumbnails"]!.NthFromLast(0)!.Get<string>("url");
         var albumTitle = albumInfoSection["title"]!["runs"]![0]!.Get<string>("text")!;
@@ -54,7 +53,7 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
 
             if (navigationEndpoint == null)
             {
-                var artistName = artistsSection[i]!.Get<string>("text");
+                var artistName = artistsSection[i]!.Get<string>("text")!.Trim();
                 var unregisteredArtistId = $"{Constants.UnregisteredArtistIdPrefix}:{resolvedIds.SourceId}:{artistName}";
                 artists.Add(new() { SourceId = unregisteredArtistId, SourceUrlId = unregisteredArtistId });
             }
@@ -75,16 +74,6 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
         {
             var trackId = trackElements[i]!["musicResponsiveListItemRenderer"]!["playlistItemData"]!.Get<string>("videoId")!;
             var trackTitle = trackElements[i]!["musicResponsiveListItemRenderer"]!["flexColumns"]![0]!["musicResponsiveListItemFlexColumnRenderer"]!["text"]!["runs"]![0]!.Get<string>("text")!;
-
-            if (shouldResolveTrackIds)
-            {
-                var trackIdResult = await trackIdsResolver.GetLatestIdAsync(trackId);
-
-                if (trackIdResult.WasSuccess)
-                {
-                    trackId = trackIdResult.Value;
-                }
-            }
 
             tracks[i] = new AlbumTrackMetadata
             {

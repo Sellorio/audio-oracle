@@ -6,13 +6,12 @@ using Microsoft.Extensions.Caching.Memory;
 using Sellorio.AudioOracle.Library;
 using Sellorio.AudioOracle.Library.ApiTools;
 using Sellorio.AudioOracle.Library.Results;
-using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
 
-internal class TrackMetadataProvider(IApiService apiService, IBrowseService browseService, IYouTubeAlbumMetadataProvider albumMetadataProvider) : ITrackMetadataProvider
+internal class TrackMetadataProvider(IApiService apiService, IBrowseService browseService, IYouTubeAlbumMetadataProvider albumMetadataProvider, ITrackIdsResolver trackIdsResolver) : ITrackMetadataProvider
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.MaxValue;
@@ -27,14 +26,12 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
     private async Task<ValueResult<TrackMetadata>> GetTrackMetadataWithoutCacheAsync((ResolvedIds AlbumIds, ResolvedIds TrackIds) inputs)
     {
         var albumMetadata = await albumMetadataProvider.GetAlbumMetadataAsync(inputs.AlbumIds);
-        var albumArtUrl = albumMetadata.Value.AlbumArtUrl;
 
-        var nextApiResult = await apiService.PostWithContextAsync("/next?prettyPrint=false", new { videoId = inputs.TrackIds.SourceId });
+        var nextApiResult = await apiService.PostWithContextAsync("/next?prettyPrint=false", new { videoId = inputs.TrackIds.SourceId, playlistId = inputs.AlbumIds.SourceId });
         var infoSection = nextApiResult["contents"]!["singleColumnMusicWatchNextResultsRenderer"]!["tabbedRenderer"]!["watchNextTabbedResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["musicQueueRenderer"]!["content"]!["playlistPanelRenderer"]!["contents"]![0]!["playlistPanelVideoRenderer"]!;
         var byLineSection = infoSection["longBylineText"]!["runs"]!;
 
         var fullTrackTitle = infoSection["title"]!["runs"]![0]!.Get<string>("text")!;
-        var trackArtUrl = infoSection["thumbnail"]!["thumbnails"]!.NthFromLast(0)!.Get<string>("url")!;
         var durationString = infoSection["lengthText"]!["runs"]![0]!.Get<string>("text")!;
 
         if (durationString.Count(x => x == ':') == 1)
@@ -59,11 +56,15 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
         var trackNumber = albumMetadata.Value.Tracks.Index().First(x => x.Item.Ids.SourceId == inputs.TrackIds.SourceId).Index + 1;
         var (title, alternateTitle) = await GetTitlesAsync(inputs.TrackIds, fullTrackTitle);
 
+        // make sure we apply any automatic redirects when downloading tracks
+        var trackIdResult = await trackIdsResolver.GetLatestIdAsync(inputs.TrackIds.SourceId);
+        var downloadId = trackIdResult.WasSuccess ? trackIdResult.Value : inputs.TrackIds.SourceId;
+
         return new TrackMetadata
         {
-            AlbumArtOverrideUrl = albumArtUrl == trackArtUrl ? null : trackArtUrl,
+            AlbumArtOverrideUrl = null,
             ArtistIds = artistIds,
-            DownloadIds = inputs.TrackIds,
+            DownloadIds = new() { SourceId = downloadId, SourceUrlId = downloadId },
             Duration = duration,
             TrackNumber = trackNumber,
             Title = title,
@@ -77,7 +78,7 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
 
         if (navigationEndpoint == null)
         {
-            var artistName = artistElement.Get<string>("text");
+            var artistName = artistElement.Get<string>("text")!.Trim();
             var unregisteredArtistId = $"{Constants.UnregisteredArtistIdPrefix}:{albumId.SourceId}:{artistName}";
             return new() { SourceId = unregisteredArtistId, SourceUrlId = unregisteredArtistId };
         }
