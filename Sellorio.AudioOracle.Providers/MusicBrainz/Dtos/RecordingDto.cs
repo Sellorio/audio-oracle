@@ -7,8 +7,8 @@ internal class RecordingDto
 {
     public required Guid Id { get; init; }
     public required string Title { get; init; }
-    public required int? Length { get; init; }
-    public required IList<ReleaseDto> Releases { get; init; }
-    public required IList<ArtistCreditItemDto> ArtistCredit { get; init; }
-    public required int? Score { get; init; }
+    public int? Length { get; init; }
+    public IList<ReleaseDto>? Releases { get; init; }
+    public IList<ArtistCreditItemDto>? ArtistCredit { get; init; }
+    public int? Score { get; init; }
 }

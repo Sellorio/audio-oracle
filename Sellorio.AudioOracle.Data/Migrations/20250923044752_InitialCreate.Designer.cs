@@ -11,7 +11,7 @@ using Sellorio.AudioOracle.Data;
 namespace Sellorio.AudioOracle.Data.Migrations
 {
     [DbContext(typeof(DatabaseContext))]
-    [Migration("20250909055008_InitialCreate")]
+    [Migration("20250923044752_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -104,7 +104,8 @@ namespace Sellorio.AudioOracle.Data.Migrations
 
                     b.Property<string>("FolderName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
 
                     b.Property<DateOnly?>("ReleaseDate")
                         .HasColumnType("TEXT");
@@ -267,7 +268,8 @@ namespace Sellorio.AudioOracle.Data.Migrations
 
                     b.Property<string>("Filename")
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
 
                     b.Property<bool>("IsRequested")
                         .HasColumnType("INTEGER");

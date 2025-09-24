@@ -1,0 +1,47 @@
+﻿@using Sellorio.AudioOracle.Models.Metadata
+@using Sellorio.AudioOracle.Models.Search
+@using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@inherits AoDialogBase<Album>
+@inject IAlbumCreationService AlbumCreationService
+
+<AoDialogLayout Title="Add Album">
+	<AoBoxLoader Loading="isAdding">
+		<AoForm OnValidSubmit="AddAlbumAsync">
+			<AoTextField Label="Name" Value="@SearchResult.AlbumTitle" Disabled />
+			<AoFormSeparator />
+			<AoTextField Label="Source" Value="@SearchResult.Source" Disabled />
+			<AoTextField Label="Source ID" Value="@SearchResult.AlbumId" Disabled />
+			<AoFormSeparator />
+			<AoEnumSwitch TEnum="TracksToRequest" @bind-SelectedOption="tracksToRequest" />
+			<AoResultMessages Result="addResult" />
+			<AoFormButtons>
+				<AoSubmit Label="Add" />
+			</AoFormButtons>
+		</AoForm>
+	</AoBoxLoader>
+</AoDialogLayout>
+
+@code {
+	bool isAdding;
+	ValueResult<Album>? addResult;
+	TracksToRequest tracksToRequest;
+
+	[Parameter]
+	public required SearchResult SearchResult { get; set; }
+
+	private async Task AddAlbumAsync()
+	{
+		isAdding = true;
+		addResult = await AlbumCreationService.CreateAlbumAsync(new()
+		{
+			SearchResult = SearchResult,
+			TracksToRequest = tracksToRequest
+		});
+		isAdding = false;
+
+		if (addResult.WasSuccess)
+		{
+			CloseDialog(addResult.Value);
+		}
+	}
+}

@@ -36,15 +36,21 @@ internal class CoverArtArchiveService(HttpClient httpClient) : ICoverArtArchiveS
         response.EnsureSuccessStatusCode();
 
         var dto = await response.Content.ReadFromJsonAsync<ReleaseArtDto>();
-        var thumbnails = dto!.Images?.FirstOrDefault(x => x.Front)?.Thumbnails;
 
-        if (thumbnails == null)
+        if (dto!.Images == null)
         {
             return null;
         }
 
-        _ = thumbnails.TryGetValue("500", out var result) ||
-            thumbnails.TryGetValue("large", out result);
+        var image = dto!.Images.FirstOrDefault(x => x.Front) ?? dto.Images.FirstOrDefault();
+
+        if (image == null || image.Thumbnails == null)
+        {
+            return null;
+        }
+
+        _ = image.Thumbnails.TryGetValue("500", out var result) ||
+            image.Thumbnails.TryGetValue("large", out result);
 
         return result;
     }

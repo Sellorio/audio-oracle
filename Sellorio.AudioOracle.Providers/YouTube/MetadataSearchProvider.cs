@@ -103,10 +103,12 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
             root["menu"]?["menuRenderer"]?["items"]?[0]?["menuNavigationItemRenderer"]?["navigationEndpoint"]?["watchPlaylistEndpoint"]?.Get<string>("playlistId")
                 ?? throw new InvalidOperationException("Unable to parse search results.");
 
+        var albumBrowseId = root["navigationEndpoint"]!["browseEndpoint"]!.Get<string>("browseId")!;
+
         return Task.FromResult(new MetadataSearchResult
         {
             AlbumArtUrl = thumbnailUrl,
-            AlbumIds = new() { SourceId = albumId, SourceUrlId = albumId },
+            AlbumIds = new() { SourceId = albumId, SourceUrlId = albumBrowseId },
             AlbumTitle = title,
             AlternateAlbumTitle = null,
             Title = title,
@@ -144,7 +146,7 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
                 ?? throw new InvalidOperationException("Unable to parse search results.");
 
         var artists = new List<string>();
-        (string Id, string Title)? album = null;
+        (string Id, string BrowseId, string Title)? album = null;
 
         for (var i = 0; i < albumArtistSection.ArrayLength; i += 2)
         {
@@ -168,7 +170,7 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
 
                 var albumId = await browseService.ResolveAlbumIdFromBrowseIdAsync(albumBrowseId);
 
-                album = (albumId, albumTitle);
+                album = (albumId, albumBrowseId, albumTitle);
             }
             else // artist
             {
@@ -187,7 +189,7 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
         return new MetadataSearchResult
         {
             AlbumArtUrl = thumbnailUrl,
-            AlbumIds = new() { SourceId = album!.Value.Id, SourceUrlId = album.Value.Id },
+            AlbumIds = new() { SourceId = album!.Value.Id, SourceUrlId = album.Value.BrowseId },
             AlbumTitle = album.Value.Title,
             AlternateAlbumTitle = null,
             Title = title,

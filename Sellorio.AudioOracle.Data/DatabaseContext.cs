@@ -70,6 +70,17 @@ public class DatabaseContext : DbContext
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
     {
+#if DEBUG
+        optionsBuilder.LogTo(Console.WriteLine);
+        optionsBuilder.EnableSensitiveDataLogging();
+#endif
+
         optionsBuilder.UseSqlite($"Data Source={DbPath}");
+    }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<AlbumData>().Property(x => x.FolderName).UseCollation("NOCASE");
+        modelBuilder.Entity<TrackData>().Property(x => x.Filename).UseCollation("NOCASE");
     }
 }

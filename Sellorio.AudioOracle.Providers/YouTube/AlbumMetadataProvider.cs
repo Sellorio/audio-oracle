@@ -25,7 +25,7 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
 
     private async Task<ValueResult<AlbumMetadata>> GetAlbumMetadataWithoutCacheAsync(ResolvedIds resolvedIds)
     {
-        var browseId = "VL" + resolvedIds.SourceId;
+        var browseId = resolvedIds.SourceUrlId;
         var apiResult = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId });
         var contents = apiResult["contents"];
 
@@ -107,7 +107,7 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
     private async Task<IEnumerable<JsonNavigator?>> GetTrackElementsWithExpandedContinuationsAsync(JsonNavigator apiResult)
     {
         var content = apiResult["contents"]!["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!;
-        var trackElements = content["contents"]![0]!["musicPlaylistShelfRenderer"]!["contents"]!.AsEnumerable();
+        var trackElements = content["contents"]![0]!["musicShelfRenderer"]!["contents"]!.AsEnumerable();
         var continuationInfo = content["continuations"];
 
         if (continuationInfo != null)

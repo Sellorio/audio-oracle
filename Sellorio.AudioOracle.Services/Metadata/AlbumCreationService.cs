@@ -10,11 +10,11 @@ using Sellorio.AudioOracle.Data.Metadata;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
 using Sellorio.AudioOracle.Models.Metadata;
-using Sellorio.AudioOracle.Models.Search;
 using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
@@ -23,14 +23,15 @@ internal class AlbumCreationService(
     IMetadataMapper metadataMapper,
     IProviderInvocationService providerInvocationService,
     IFileService fileService,
-    IArtistCreationService artistCreationService) : IAlbumCreationService
+    IArtistCreationService artistCreationService,
+    ITrackMetadataTaskQueuingService trackMetadataTaskQueuingService) : IAlbumCreationService
 {
-    public async Task<ValueResult<Album>> CreateAlbumFromSearchResultAsync(SearchResult searchResult)
+    public async Task<ValueResult<Album>> CreateAlbumAsync(AlbumPost albumPost)
     {
         var existingAlbum =
             await databaseContext.Albums
                 .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Source == searchResult.Source && x.SourceId == searchResult.AlbumId);
+                .FirstOrDefaultAsync(x => x.Source == albumPost.SearchResult.Source && x.SourceId == albumPost.SearchResult.AlbumId);
 
         if (existingAlbum != null)
         {
@@ -39,17 +40,17 @@ internal class AlbumCreationService(
 
         var albumMetadataResult =
             await providerInvocationService.InvokeAsync<IAlbumMetadataProvider, AlbumMetadata>(
-                searchResult.Source,
-                x => x.GetAlbumMetadataAsync(new() { SourceId = searchResult.AlbumId, SourceUrlId = searchResult.AlbumUrlId }));
+                albumPost.SearchResult.Source,
+                x => x.GetAlbumMetadataAsync(new() { SourceId = albumPost.SearchResult.AlbumId, SourceUrlId = albumPost.SearchResult.AlbumUrlId }));
 
         if (!albumMetadataResult.WasSuccess)
         {
             return ValueResult<Album>.Failure(albumMetadataResult.Messages);
         }
 
-        return await databaseContext.WithTransaction<ValueResult<Album>>(async databaseContextTransaction =>
+        var result = await databaseContext.WithTransaction<ValueResult<Album>>(async databaseContextTransaction =>
         {
-            var fileInfo = searchResult.AlbumArtUrl == null ? null : await fileService.CreateFileFromUrlAsync(searchResult.AlbumArtUrl);
+            var fileInfo = albumPost.SearchResult.AlbumArtUrl == null ? null : await fileService.CreateFileFromUrlAsync(albumPost.SearchResult.AlbumArtUrl);
 
             if (fileInfo != null && !fileInfo.WasSuccess)
             {
@@ -60,7 +61,7 @@ internal class AlbumCreationService(
             var artistsResult =
                 await artistCreationService.GetOrCreateArtistsAsync(
                     albumMetadataResult.Value!.ArtistIds
-                        .Select(x => new ArtistPost { Source = searchResult.Source, SourceId = x.SourceId, SourceUrlId = x.SourceUrlId })
+                        .Select(x => new ArtistPost { Source = albumPost.SearchResult.Source, SourceId = x.SourceId, SourceUrlId = x.SourceUrlId })
                         .ToArray());
 
             if (!artistsResult.WasSuccess)
@@ -73,26 +74,38 @@ internal class AlbumCreationService(
             {
                 AlbumArtId = fileInfo?.Value!.Id,
                 AlbumArt = fileInfo == null ? null : await databaseContext.FileInfos.FindAsync(fileInfo.Value!.Id),
-                AlternateTitle = searchResult.AlternateAlbumTitle,
+                AlternateTitle = albumPost.SearchResult.AlternateAlbumTitle,
                 Artists = artistsResult.Value!.Where(x => x != null).Select(x => new AlbumArtistData { ArtistId = x!.Id }).ToArray(),
                 ReleaseDate = albumMetadataResult.Value.ReleaseDate,
                 ReleaseYear = albumMetadataResult.Value.ReleaseYear,
-                Source = searchResult.Source,
-                SourceId = searchResult.AlbumId,
-                SourceUrlId = searchResult.AlbumUrlId,
-                Title = searchResult.AlbumTitle,
+                Source = albumPost.SearchResult.Source,
+                SourceId = albumPost.SearchResult.AlbumId,
+                SourceUrlId = albumPost.SearchResult.AlbumUrlId,
+                Title = albumPost.SearchResult.AlbumTitle,
                 TrackCount = (ushort)albumMetadataResult.Value.Tracks.Count,
-                Tracks = ConvertToTrackDatas(searchResult.Source, albumMetadataResult.Value.Tracks),
-                FolderName = await GenerateUniqueFolderNameAsync(searchResult.AlbumTitle, albumMetadataResult.Value.ReleaseYear)
+                Tracks = ConvertToTrackDatas(albumPost.SearchResult.Source, albumMetadataResult.Value.Tracks, albumPost.TracksToRequest),
+                FolderName = await GenerateUniqueFolderNameAsync(albumPost.SearchResult.AlbumTitle, albumMetadataResult.Value.ReleaseYear)
             };
 
             databaseContext.Albums.Add(albumData);
+            var hasFileId = await databaseContext.FileInfos.AnyAsync(x => x.Id == 1);
             await databaseContext.SaveChangesAsync();
 
-            var mappedAlbum = metadataMapper.Map(albumData); // TODO: Check if artists are fully populated
+            var mappedAlbum = metadataMapper.Map(albumData);
+            mappedAlbum.Artists = artistsResult.Value!;
 
-            return mappedAlbum;
+            return mappedAlbum; // TODO: Check if artists are fully populated
         });
+
+        if (result.WasSuccess)
+        {
+            foreach (var track in result.Value.Tracks)
+            {
+                await trackMetadataTaskQueuingService.QueueAsync(track.Id);
+            }
+        }
+
+        return result;
     }
 
     private async Task<string> GenerateUniqueFolderNameAsync(string albumName, int? albumYear)
@@ -102,7 +115,7 @@ internal class AlbumCreationService(
         var result = resultWithoutCounter;
         var counter = 1;
 
-        while (await databaseContext.Albums.AnyAsync(x => x.FolderName.Equals(result, StringComparison.OrdinalIgnoreCase)))
+        while (await databaseContext.Albums.AnyAsync(x => x.FolderName == result))
         {
             counter++;
             result = resultWithoutCounter + " " + counter;
@@ -111,7 +124,7 @@ internal class AlbumCreationService(
         return result;
     }
 
-    private static IList<TrackData> ConvertToTrackDatas(string providerName, IList<AlbumTrackMetadata> albumTrackMetadata)
+    private static IList<TrackData> ConvertToTrackDatas(string providerName, IList<AlbumTrackMetadata> albumTrackMetadata, TracksToRequest tracksToRequest)
     {
         return albumTrackMetadata.Select(x => new TrackData
         {
@@ -119,7 +132,7 @@ internal class AlbumCreationService(
             MetadataSourceId = x.Ids.SourceId,
             MetadataSourceUrlId = x.Ids.SourceUrlId,
             Title = x.Title,
-            IsRequested = true,
+            IsRequested = tracksToRequest == TracksToRequest.All,
             Status = TrackStatus.MissingMetadata
         }).ToArray();
     }

@@ -10,3 +10,4 @@ services:
       - "27572:80"
     volumes:
       - "./temp/data:/data"
+      - "./temp/music:/music"

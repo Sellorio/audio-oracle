@@ -6,6 +6,6 @@ namespace Sellorio.AudioOracle.Services.TaskQueue;
 
 internal interface ITaskQueuingService
 {
-    Task<QueuedTask> QueueTaskAsync<TTaskHandler>(int? objectId, int? objectId2)
+    Task<QueuedTask?> QueueTaskAsync<TTaskHandler>(int? objectId, int? objectId2)
         where TTaskHandler : ITaskHandler;
 }

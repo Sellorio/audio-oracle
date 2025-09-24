@@ -1,9 +1,12 @@
+using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using Sellorio.AudioOracle.Client;
 using Sellorio.AudioOracle.Client.Sessions;
 using Sellorio.AudioOracle.Web.Client.Services;
+
+[assembly: InternalsVisibleTo("Sellorio.AudioOracle.Web.Client.UnitTests")]
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 

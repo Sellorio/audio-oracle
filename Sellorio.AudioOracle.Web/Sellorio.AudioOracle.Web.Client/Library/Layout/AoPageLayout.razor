@@ -27,7 +27,16 @@
 		}
 
 		<MudMainContent>
-			@ChildContent
+			@if (NoPadding)
+			{
+				@ChildContent
+			}
+			else
+			{
+				<div class="layout-padding-wrapper">
+					@ChildContent
+				</div>
+			}
 		</MudMainContent>
 	</MudLayout>
 </div>
@@ -35,6 +44,9 @@
 @code {
 	[CascadingParameter]
 	public required IAuthenticationProvider AuthenticationProvider { get; set; }
+
+	[Parameter]
+	public bool NoPadding { get; set; }
 
 	[Parameter]
 	public RenderFragment? ChildContent { get; set; }
@@ -48,7 +60,7 @@
 
 		if (logoutResult.WasSuccess)
 		{
-			NavigationManager.NavigateTo(NavigationManager.BaseUri);
+			NavigationManager.NavigateTo("/");
 		}
 	}
 }

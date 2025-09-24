@@ -2,7 +2,7 @@
 	bool isSubmitting = Form != null && Form.IsSubmitting;
 }
 
-<AoButton Primary Label="@Label" Loading="isSubmitting" OnClick="HandleClick" />
+<AoButton Primary Label="@Label" Loading="isSubmitting" OnClick="HandleClick" Disabled="Form?.Disabled == true" />
 
 @code {
 	[CascadingParameter]

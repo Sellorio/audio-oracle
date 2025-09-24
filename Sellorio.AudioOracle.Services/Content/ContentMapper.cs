@@ -7,4 +7,5 @@ namespace Sellorio.AudioOracle.Services.Content;
 internal class ContentMapper : StaticMapperBase<ContentMapper>, IContentMapper
 {
     public FileInfo Map(FileInfoData from) => Map<FileInfo>(from);
+    public FileContent Map(FileContentData from) => Map<FileContent>(from);
 }

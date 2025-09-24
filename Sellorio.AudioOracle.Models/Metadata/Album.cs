@@ -19,5 +19,5 @@ public class Album
     public required DateOnly? ReleaseDate { get; init; }
     public required ushort? ReleaseYear { get; init; }
     public required ushort TrackCount { get; init; }
-    public required IList<Artist> Artists { get; init; }
+    public required IList<Artist> Artists { get; set; }
 }

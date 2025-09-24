@@ -1,10 +1,13 @@
-﻿using Sellorio.AudioOracle.Data.Metadata;
+﻿using Sellorio.AudioOracle.Data.Content;
+using Sellorio.AudioOracle.Data.Metadata;
 using Sellorio.AudioOracle.Library.Mapping;
+using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
+using Sellorio.AudioOracle.Services.Content;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
-internal class MetadataMapper : StaticMapperBase<MetadataMapper>, IMetadataMapper
+internal class MetadataMapper(IContentMapper contentMapper) : StaticMapperBase<MetadataMapper>, IMetadataMapper
 {
     protected override void Configure(MapMethodConfiguration<MetadataMapper> configure)
     {
@@ -19,6 +22,8 @@ internal class MetadataMapper : StaticMapperBase<MetadataMapper>, IMetadataMappe
             o.ConstructUsing(o => o.Artist == null ? null : Map(o.Artist));
             o.ForAllMembers(o => o.Ignore());
         });
+
+        configure.AddWithConfig<FileInfoData, FileInfo>(o => o.ConstructUsing(x => contentMapper.Map(x)));
     }
 
     public Album Map(AlbumData from) => Map<Album>(from);

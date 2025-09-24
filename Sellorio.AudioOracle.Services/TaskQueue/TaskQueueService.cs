@@ -51,12 +51,16 @@ internal class TaskQueueService(IServiceProvider serviceProvider, ILogger<TaskQu
                     CancellationToken = cancellationToken
                 };
 
+                var wasSuccessful = true;
+
                 try
                 {
                     await handler.HandleAsync(handlerContext);
                 }
                 catch (Exception ex)
                 {
+                    wasSuccessful = false;
+
                     logger.LogException(ex, "Failed to execute task {Handler}.", handler.HandlerName);
 
                     if (taskData.Lives > 0)
@@ -74,6 +78,12 @@ internal class TaskQueueService(IServiceProvider serviceProvider, ILogger<TaskQu
                         _futureTasks.Add(queuedTask);
                     }
 
+                    await databaseContext.SaveChangesAsync(cancellationToken);
+                }
+
+                if (wasSuccessful)
+                {
+                    databaseContext.Remove(taskData);
                     await databaseContext.SaveChangesAsync(cancellationToken);
                 }
             }

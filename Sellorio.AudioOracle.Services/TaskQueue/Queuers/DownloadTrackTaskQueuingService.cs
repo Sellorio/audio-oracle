@@ -21,6 +21,6 @@ internal class DownloadTrackTaskQueuingService(DatabaseContext databaseContext, 
 
         await databaseContext.SaveChangesAsync();
 
-        await taskQueuingService.QueueTaskAsync<Handlers.TrackMetadata>(trackId, null);
+        await taskQueuingService.QueueTaskAsync<Handlers.DownloadTrack>(trackId, null);
     }
 }

@@ -52,10 +52,13 @@ internal class FileService(HttpClient httpClient, DatabaseContext databaseContex
             OriginalUrl = url
         };
 
-        databaseContext.FileContents.Add(fileContentData);
         databaseContext.FileInfos.Add(fileInfoData);
 
         await databaseContext.SaveChangesAsync();
+
+        databaseContext.Entry(fileInfoData).State = EntityState.Detached;
+        databaseContext.Entry(fileContentData).State = EntityState.Detached;
+        fileInfoData.Content = null;
 
         return contentMapper.Map(fileInfoData);
     }

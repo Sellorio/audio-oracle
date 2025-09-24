@@ -70,7 +70,7 @@ internal class YtDlpService(HttpClient httpClient) : IYtDlpService
             }
 
             var version = FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
-            var client = new GitHubClient(new ProductHeaderValue(ProviderConstants.UserAgent));
+            var client = new GitHubClient(ProductHeaderValue.Parse(ProviderConstants.UserAgent));
             var releases = await client.Repository.Release.GetAll("yt-dlp", "yt-dlp", new() { StartPage = 1, PageSize = 1 });
             var release = releases[0];
 

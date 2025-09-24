@@ -134,7 +134,7 @@ namespace Sellorio.AudioOracle.Data.Migrations
                     TrackCount = table.Column<ushort>(type: "INTEGER", nullable: false),
                     ReleaseDate = table.Column<DateOnly>(type: "TEXT", nullable: true),
                     ReleaseYear = table.Column<ushort>(type: "INTEGER", nullable: true),
-                    FolderName = table.Column<string>(type: "TEXT", nullable: false)
+                    FolderName = table.Column<string>(type: "TEXT", nullable: false, collation: "NOCASE")
                 },
                 constraints: table =>
                 {
@@ -193,7 +193,7 @@ namespace Sellorio.AudioOracle.Data.Migrations
                     Duration = table.Column<TimeSpan>(type: "TEXT", nullable: true),
                     TrackNumber = table.Column<int>(type: "INTEGER", nullable: true),
                     StatusText = table.Column<string>(type: "TEXT", maxLength: 300, nullable: true),
-                    Filename = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true)
+                    Filename = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: true, collation: "NOCASE")
                 },
                 constraints: table =>
                 {

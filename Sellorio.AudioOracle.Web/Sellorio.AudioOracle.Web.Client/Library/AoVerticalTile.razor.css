@@ -1,0 +1,20 @@
+﻿.ao-vertical-tile {
+    width: 300px;
+}
+
+.ao-vertical-tile .title {
+    padding: 0 10px;
+}
+
+.ao-vertical-tile .image {
+    margin: 0 5px;
+    width: calc(100% - 10px);
+}
+
+.ao-vertical-tile .content {
+    padding: 2px 7px 5px;
+}
+
+.ao-vertical-tile.clickable {
+    cursor: pointer;
+}

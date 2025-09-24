@@ -33,7 +33,7 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
         return new AlbumMetadata
         {
             AlbumArtUrl = await coverArtArchiveService.GetReleaseArtUrlAsync(Guid.Parse(resolvedIds.SourceUrlId)),
-            ArtistIds = release!.ArtistCredit.Select(x => x.Artist.Id.ToString()).Select(x => new ResolvedIds { SourceId = x, SourceUrlId = x }).ToArray(),
+            ArtistIds = release!.ArtistCredit?.Select(x => x.Artist.Id.ToString()).Select(x => new ResolvedIds { SourceId = x, SourceUrlId = x }).ToArray() ?? [],
             ReleaseDate = release.Date,
             ReleaseYear = (ushort?)release.ReleaseYear,
             Title = release.Title,
@@ -74,21 +74,24 @@ internal class AlbumMetadataProvider(HttpClient httpClient, ICoverArtArchiveServ
         var json = await responseMessage.Content.ReadAsStringAsync();
         var release = JsonSerializer.Deserialize<ReleaseDto>(json, Constants.JsonOptions)!;
 
-        var trackOffset = 0;
-
-        foreach (var medium in release.Media)
+        if (release.Media != null)
         {
-            medium.TrackOffset = trackOffset;
+            var trackOffset = 0;
 
-            foreach (var track in medium.Tracks!)
+            foreach (var medium in release.Media)
             {
-                track.Number = (int.Parse(track.Number) + trackOffset).ToString();
+                medium.TrackOffset = trackOffset;
+
+                foreach (var track in medium.Tracks!)
+                {
+                    track.Number = (int.Parse(track.Number) + trackOffset).ToString();
+                }
+
+                trackOffset += medium.TrackCount;
             }
 
-            trackOffset += medium.TrackCount;
+            release.TrackCount = trackOffset;
         }
-
-        release.TrackCount = trackOffset;
 
         return release;
     }

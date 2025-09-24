@@ -10,9 +10,10 @@ using Sellorio.AudioOracle.Services.Content;
 namespace Sellorio.AudioOracle.Web.Controllers;
 
 [ApiController]
-public class FileController(IFileService fileService, HttpClient httpClient) : ControllerBase
+public class FileController(IFileService fileService, IHttpClientFactory httpClientFactory) : ControllerBase
 {
-    [Authorize]
+    private readonly HttpClient _httpClient = httpClientFactory.CreateClient(nameof(FileController));
+
     [HttpGet("f/{urlId}")]
     public async Task<IActionResult> GetFileContentAsync(string urlId)
     {
@@ -49,7 +50,7 @@ public class FileController(IFileService fileService, HttpClient httpClient) : C
             Method = HttpMethod.Get
         };
 
-        var response = await httpClient.SendAsync(request);
+        var response = await _httpClient.SendAsync(request);
         response.EnsureSuccessStatusCode();
 
         return

@@ -37,7 +37,7 @@ internal class TrackMetadataProvider(
 
         var json = await responseMessage.Content.ReadAsStringAsync();
         var recording = JsonSerializer.Deserialize<RecordingDto>(json, Constants.JsonOptions);
-        var recordingRelease = recording!.Releases.First(x => x.Id == releaseId);
+        var recordingRelease = recording!.Releases!.First(x => x.Id == releaseId);
         var recordingReleaseTrack = recordingRelease.Media.SelectMany(x => x.Tracks!).Single();
 
         var release = await musicBrainzAlbumMetadataProvider.GetMusicBrainzReleaseAsync(releaseId);
@@ -49,7 +49,7 @@ internal class TrackMetadataProvider(
             Title = track.Title,
             AlternateTitle = null,
             DownloadIds = null,
-            ArtistIds = recording.ArtistCredit.Select(x => x.Artist.Id.ToString()).Select(x => new ResolvedIds { SourceId = x, SourceUrlId = x }).ToArray(),
+            ArtistIds = recording.ArtistCredit?.Select(x => x.Artist.Id.ToString()).Select(x => new ResolvedIds { SourceId = x, SourceUrlId = x }).ToArray() ?? [],
             Duration = recording.Length == null ? null : TimeSpan.FromMilliseconds(recording.Length.Value),
             TrackNumber = int.Parse(track.Number)
         };

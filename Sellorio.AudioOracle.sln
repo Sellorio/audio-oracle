@@ -29,6 +29,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Servic
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Providers", "Sellorio.AudioOracle.Providers\Sellorio.AudioOracle.Providers.csproj", "{DDE3186C-5F86-48CA-9EA6-69DD1A9E30F8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellorio.AudioOracle.Web.Client.UnitTests", "Tests\Sellorio.AudioOracle.Web.Client.UnitTests\Sellorio.AudioOracle.Web.Client.UnitTests.csproj", "{B38C9B25-60EA-42C5-9DD7-293204F32D5F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,9 +79,16 @@ Global
 		{DDE3186C-5F86-48CA-9EA6-69DD1A9E30F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DDE3186C-5F86-48CA-9EA6-69DD1A9E30F8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DDE3186C-5F86-48CA-9EA6-69DD1A9E30F8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B38C9B25-60EA-42C5-9DD7-293204F32D5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B38C9B25-60EA-42C5-9DD7-293204F32D5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B38C9B25-60EA-42C5-9DD7-293204F32D5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B38C9B25-60EA-42C5-9DD7-293204F32D5F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B38C9B25-60EA-42C5-9DD7-293204F32D5F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2CDB718A-9E87-4B80-8CE4-DA48DF239CED}

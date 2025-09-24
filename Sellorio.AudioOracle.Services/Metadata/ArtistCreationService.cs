@@ -53,7 +53,7 @@ internal class ArtistCreationService(DatabaseContext databaseContext, IMetadataM
                     group.Key,
                     x => x.GetArtistMetadataAsync(groupIds));
 
-            if (missingArtistsMetadataResult.WasSuccess ||
+            if (!missingArtistsMetadataResult.WasSuccess ||
                 missingArtistsMetadataResult.Value!.Any(x => x == null))
             {
                 return ResultMessage.Error("Failed to retrieve artist metadata from provider.");

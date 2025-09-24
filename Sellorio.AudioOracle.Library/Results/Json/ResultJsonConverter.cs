@@ -111,12 +111,12 @@ internal class ResultJsonConverter : JsonConverter<IResult?>
             forResult1: () => jsonValue = JsonSerializer.SerializeToElement((object?)null),
             forValueResult1: () =>
             {
-                var value = result.GetType().GetProperty(nameof(ValueResult<object>.Value))!.GetValue(result);
+                var value = result.WasSuccess ? result.GetType().GetProperty(nameof(ValueResult<object>.Value))!.GetValue(result) : default;
                 jsonValue = JsonSerializer.SerializeToElement(value, options);
             },
             forValueResult2: () =>
             {
-                var value = result.GetType().GetProperty(nameof(ValueResult<object, object>.Value))!.GetValue(result);
+                var value = result.WasSuccess ? result.GetType().GetProperty(nameof(ValueResult<object, object>.Value))!.GetValue(result) : default;
                 jsonValue = JsonSerializer.SerializeToElement(value, options);
             });
 

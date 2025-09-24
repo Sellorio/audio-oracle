@@ -1,15 +1,18 @@
 ﻿@page "/albums/add"
+@using Sellorio.AudioOracle.Models.Metadata
 @using Sellorio.AudioOracle.Models.Search
 @using Sellorio.AudioOracle.ServiceInterfaces.Search
 @using System.Web
+@using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
 @inject ISearchService SearchService
+@inject NavigationManager NavigationManager
 
-You are on search!
-
-<AoForm OnValidSubmit="SearchAsync">
-	<AoTextField Label="Search" @bind-Value="searchText" Required MaxLength="200" /> 
-</AoForm>
-
+<AoPanel>
+	<AoForm OnValidSubmit="SearchAsync">
+		<AoTextField Label="Search" @bind-Value="searchText" Required MaxLength="200" /> 
+	</AoForm>
+</AoPanel>
+<AoSpace />
 <AoBoxLoader Loading="isLoading">
 	@if (searchResult == null)
 	{
@@ -43,6 +46,10 @@ You are on search!
 								{
 									<img src="@($"/pf?url={HttpUtility.UrlEncode(item.AlbumArtUrl)}")">
 								}
+								else
+								{
+									<AoImagePlaceholder />
+								}
 							</td>
 							<td>@item.Title</td>
 							<td>@item.AlbumTitle</td>
@@ -65,6 +72,9 @@ You are on search!
 	ValueResult<IList<SearchResult>>? searchResult;
 	bool isLoading;
 
+	[CascadingParameter]
+	public required IDialogProvider DialogProvider { get; set; }
+
 	async Task SearchAsync()
 	{
 		isLoading = true;
@@ -79,8 +89,13 @@ You are on search!
 		}
 	}
 
-	Task SelectSearchResultAsync(SearchResult item)
+	async Task SelectSearchResultAsync(SearchResult item)
 	{
-		return Task.CompletedTask;
+		var result = await DialogProvider.ShowDialog(() => new AddAlbumDialog { SearchResult = item });
+
+		if (result.WasSuccess)
+		{
+			NavigationManager.NavigateTo($"/albums/{result.Value.Id}");
+		}
 	}
 }

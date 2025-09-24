@@ -1,6 +1,8 @@
-﻿<MudSimpleTable>
-	@ChildContent
-</MudSimpleTable>
+﻿<div class="@("ao-grid-list" + (ClickableRows ? " clickable-rows" : ""))">
+	<MudSimpleTable>
+		@ChildContent
+	</MudSimpleTable>
+</div>
 
 @code {
 	[Parameter]

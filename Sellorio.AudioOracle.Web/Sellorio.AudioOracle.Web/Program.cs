@@ -1,4 +1,6 @@
 using System;
+using System.Net.Http;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,12 +26,16 @@ if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable(EnvironmentVariables
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services
+    .AddHttpClient(nameof(Sellorio.AudioOracle.Web.Controllers.FileController))
+    .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true });
+
+builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents()
     .AddInteractiveWebAssemblyComponents();
 
 builder.Services
-    .AddControllers();
+    .AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services
     .AddScoped<AuthorizeFilter>()
@@ -57,8 +63,6 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
-app.UseHttpsRedirection();
 
 app.UseAntiforgery();
 

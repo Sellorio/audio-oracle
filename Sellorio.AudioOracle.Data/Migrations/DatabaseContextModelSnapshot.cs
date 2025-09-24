@@ -101,7 +101,8 @@ namespace Sellorio.AudioOracle.Data.Migrations
 
                     b.Property<string>("FolderName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
 
                     b.Property<DateOnly?>("ReleaseDate")
                         .HasColumnType("TEXT");
@@ -264,7 +265,8 @@ namespace Sellorio.AudioOracle.Data.Migrations
 
                     b.Property<string>("Filename")
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
 
                     b.Property<bool>("IsRequested")
                         .HasColumnType("INTEGER");

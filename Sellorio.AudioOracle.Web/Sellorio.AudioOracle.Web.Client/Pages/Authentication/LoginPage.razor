@@ -42,7 +42,7 @@
 		if (redirect)
 		{
 			redirect = false;
-			NavigationManager.NavigateTo(RedirectUrl ?? NavigationManager.BaseUri);
+			NavigationManager.NavigateTo(RedirectUrl ?? "/");
 		}
 	}
 }

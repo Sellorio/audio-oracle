@@ -1,0 +1,16 @@
+﻿<MudDialog>
+	<TitleContent>
+		<AoHeading3>@Title</AoHeading3>
+	</TitleContent>
+	<DialogContent>
+		@ChildContent
+	</DialogContent>
+</MudDialog>
+
+@code {
+	[Parameter, EditorRequired]
+	public required string Title { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

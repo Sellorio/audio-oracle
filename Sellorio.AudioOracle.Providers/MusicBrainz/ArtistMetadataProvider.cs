@@ -46,7 +46,7 @@ internal class ArtistMetadataProvider(HttpClient httpClient) : IArtistMetadataPr
             var resultItem = new ArtistMetadata
             {
                 Name = artist.Name,
-                Type = Enum.Parse<ArtistType>(artist.Type),
+                Type = artist.Type == null ? ArtistType.Unknown : Enum.Parse<ArtistType>(artist.Type),
                 Country = artist.Area?.Name,
                 CountryCode = artist.Country,
                 Gender =
@@ -80,7 +80,7 @@ internal class ArtistMetadataProvider(HttpClient httpClient) : IArtistMetadataPr
     private static string[] GetAliases(ArtistDto artist)
     {
         var result =
-            Enumerable.Concat([artist.Name, artist.SortName], artist.Aliases.Select(x => x.Name))
+            Enumerable.Concat([artist.Name, artist.SortName], artist.Aliases?.Select(x => x.Name) ?? [])
                 .Distinct(NameComparer.Instance)
                 .Except([artist.Name])
                 .ToArray();

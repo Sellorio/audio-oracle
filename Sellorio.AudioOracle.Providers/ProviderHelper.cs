@@ -22,7 +22,7 @@ internal static class ProviderHelper
                 new Lazy<Task<TResult?>>(async () =>
                 {
                     TResult? result = default;
-                    await rateLimit.WithRateLimit(async () => await getter?.Invoke(key)!);
+                    await rateLimit.WithRateLimit(async () => result = await getter?.Invoke(key)!);
                     return result;
                 },
                 isThreadSafe: true);

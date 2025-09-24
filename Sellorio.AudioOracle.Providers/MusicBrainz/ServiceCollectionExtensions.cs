@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Sellorio.AudioOracle.Library.DependencyInjection;
 using Sellorio.AudioOracle.Providers.Common;
@@ -30,6 +31,7 @@ public static class ServiceCollectionExtensions
                 o.BaseAddress = new Uri("https://coverartarchive.org/");
                 o.DefaultRequestHeaders.UserAgent.ParseAdd(ProviderConstants.UserAgent);
             })
+            .ConfigurePrimaryHttpMessageHandler(() => new HttpClientHandler { ServerCertificateCustomValidationCallback = (_, _, _, _) => true })
             .AddTypedClient<ICoverArtArchiveService, CoverArtArchiveService>();
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(

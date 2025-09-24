@@ -103,7 +103,7 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
 
     private async Task<MetadataSearchResult?> RecordingToSearchResultAsync(RecordingDto recording)
     {
-        var releases = recording.Releases.Where(ReleaseMinimumRequirements).OrderBy(GetReleasePreferenceOrder).ToArray();
+        var releases = recording.Releases!.Where(ReleaseMinimumRequirements).OrderBy(GetReleasePreferenceOrder).ToArray();
 
         if (releases.Length == 0)
         {
@@ -126,7 +126,7 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
                     Title = recording.Title,
                     AlternateTitle = null,
                     Type = SearchResultType.Track,
-                    ArtistNames = release.ArtistCredit.Select(x => x.Artist.Name).ToArray()
+                    ArtistNames = release.ArtistCredit?.Select(x => x.Artist.Name).ToArray() ?? []
                 };
             }
         }
@@ -141,7 +141,7 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
             Title = recording.Title,
             AlternateTitle = null,
             Type = SearchResultType.Track,
-            ArtistNames = recording.ArtistCredit.Select(x => x.Artist.Name).ToArray()
+            ArtistNames = recording.ArtistCredit?.Select(x => x.Artist.Name).ToArray() ?? []
         };
     }
 
@@ -164,7 +164,7 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
             Title = release.Title,
             AlternateTitle = null,
             Type = SearchResultType.Album,
-            ArtistNames = release.ArtistCredit.Select(x => x.Artist.Name).ToArray()
+            ArtistNames = release.ArtistCredit?.Select(x => x.Artist.Name).ToArray() ?? []
         };
     }
 
