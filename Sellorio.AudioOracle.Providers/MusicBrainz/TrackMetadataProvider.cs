@@ -38,14 +38,14 @@ internal class TrackMetadataProvider(
         var json = await responseMessage.Content.ReadAsStringAsync();
         var recording = JsonSerializer.Deserialize<RecordingDto>(json, Constants.JsonOptions);
         var recordingRelease = recording!.Releases!.First(x => x.Id == releaseId);
-        var recordingReleaseTrack = recordingRelease.Media.SelectMany(x => x.Tracks!).Single();
+        var recordingReleaseTrack = recordingRelease.Media!.SelectMany(x => x.Tracks!).Single();
 
         var release = await musicBrainzAlbumMetadataProvider.GetMusicBrainzReleaseAsync(releaseId);
-        var track = release!.Media.SelectMany(x => x.Tracks!).First(x => x.Id == recordingReleaseTrack.Id);
+        var track = release!.Media!.SelectMany(x => x.Tracks!).First(x => x.Id == recordingReleaseTrack.Id);
 
         return new TrackMetadata
         {
-            AlbumArtOverrideUrl = null, // musicbrainz doesn't support per-track album art, youtube does
+            AlbumArtOverrideUrl = null,
             Title = track.Title,
             AlternateTitle = null,
             DownloadIds = null,

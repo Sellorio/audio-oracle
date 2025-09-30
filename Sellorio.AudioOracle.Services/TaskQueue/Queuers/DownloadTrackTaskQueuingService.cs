@@ -19,8 +19,6 @@ internal class DownloadTrackTaskQueuingService(DatabaseContext databaseContext, 
             throw new ArgumentException("Track Id does not exist.", nameof(trackId));
         }
 
-        await databaseContext.SaveChangesAsync();
-
         await taskQueuingService.QueueTaskAsync<Handlers.DownloadTrack>(trackId, null);
     }
 }

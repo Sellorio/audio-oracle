@@ -1,35 +1,40 @@
-﻿using Sellorio.AudioOracle.Data.Content;
+﻿using System;
 using Sellorio.AudioOracle.Data.Metadata;
 using Sellorio.AudioOracle.Library.Mapping;
-using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Services.Content;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
-internal class MetadataMapper(IContentMapper contentMapper) : StaticMapperBase<MetadataMapper>, IMetadataMapper
+internal class MetadataMapper(IContentMapper contentMapper) : MapperBase(contentMapper), IMetadataMapper
 {
-    protected override void Configure(MapMethodConfiguration<MetadataMapper> configure)
+    public Album Map(AlbumData from)
     {
-        configure.AddWithConfig<AlbumArtistData, Artist?>(o =>
-        {
-            o.ConstructUsing(o => o.Artist == null ? null : Map(o.Artist));
-            o.ForAllMembers(o => o.Ignore());
-        });
-
-        configure.AddWithConfig<TrackArtistData, Artist?>(o =>
-        {
-            o.ConstructUsing(o => o.Artist == null ? null : Map(o.Artist));
-            o.ForAllMembers(o => o.Ignore());
-        });
-
-        configure.AddWithConfig<FileInfoData, FileInfo>(o => o.ConstructUsing(x => contentMapper.Map(x)));
+        return Map<Album>(from);
     }
 
-    public Album Map(AlbumData from) => Map<Album>(from);
-    public Artist Map(ArtistData from) => Map<Artist>(from);
-    public ArtistName Map(ArtistNameData from) => Map<ArtistName>(from);
-    public Track Map(TrackData from) => Map<Track>(from);
-    public Artist? Map(AlbumArtistData from) => Map<Artist?>(from);
-    public Artist? Map(TrackArtistData from) => Map<Artist?>(from);
+    public Artist Map(ArtistData from)
+    {
+        return Map<Artist>(from);
+    }
+
+    public ArtistName Map(ArtistNameData from)
+    {
+        return Map<ArtistName>(from);
+    }
+
+    public Track Map(TrackData from)
+    {
+        return Map<Track>(from);
+    }
+
+    public Artist Map(AlbumArtistData from)
+    {
+        return Map(from.Artist ?? throw new InvalidOperationException("Artist is missing."));
+    }
+
+    public Artist Map(TrackArtistData from)
+    {
+        return Map(from.Artist ?? throw new InvalidOperationException("Artist is missing."));
+    }
 }

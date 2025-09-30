@@ -10,6 +10,7 @@ using Sellorio.AudioOracle.Client.Sessions;
 using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Services;
+using Sellorio.AudioOracle.Web.Client.Library;
 using Sellorio.AudioOracle.Web.Client.Services;
 using Sellorio.AudioOracle.Web.Components;
 using Sellorio.AudioOracle.Web.Framework;
@@ -49,6 +50,7 @@ builder.Services.AddScoped<Microsoft.AspNetCore.Components.Authorization.Authent
 builder.Services.AddScoped<ILocalStorageService, LocalStorageService>();
 builder.Services.AddScoped<IAudioOracleSessionTokenProvider, SessionTokenProvider>();
 builder.Services.AddMudServices();
+builder.Services.AddAoServices();
 
 var app = builder.Build();
 

@@ -1,25 +1,27 @@
 ﻿@using Sellorio.AudioOracle.Library.Results.Messages
 
-@if (Result != null)
+@if (Result != null && Result.Messages.Count != 0)
 {
 	var isFirst = true;
 
-	@foreach (var message in Result.Messages)
-	{
-		var severity = message.Severity switch
+	<div class="ao-result-messages">
+		@foreach (var message in Result.Messages)
 		{
-			ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound => Severity.Error,
-			ResultMessageSeverity.Warning => Severity.Warning,
-			ResultMessageSeverity.Information => Severity.Info,
-			_ => Severity.Normal
-		};
+			var severity = message.Severity switch
+			{
+				ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound => Severity.Error,
+				ResultMessageSeverity.Warning => Severity.Warning,
+				ResultMessageSeverity.Information => Severity.Info,
+				_ => Severity.Normal
+			};
 
-		<MudAlert Severity="severity" Square Class="@(isFirst ? "mt-3" : null)">
-			@message.Text
-		</MudAlert>
+			<MudAlert Severity="severity" Square Class="@(isFirst ? "mt-3" : null)">
+				@message.Text
+			</MudAlert>
 
-		isFirst = false;
-	}
+			isFirst = false;
+		}
+	</div>
 }
 
 @code {

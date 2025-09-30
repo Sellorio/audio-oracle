@@ -6,7 +6,6 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddCommonProviderServices(this IServiceCollection services)
     {
-        services.AddHttpClient();
         services.AddTransient<IFfmpegService, FfmpegService>();
         return services;
     }

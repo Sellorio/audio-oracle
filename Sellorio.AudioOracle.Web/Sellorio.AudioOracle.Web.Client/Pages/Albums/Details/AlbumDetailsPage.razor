@@ -2,6 +2,8 @@
 @using Sellorio.AudioOracle.Models.Metadata
 @using Sellorio.AudioOracle.ServiceInterfaces.Metadata
 @inject IAlbumService AlbumService
+@inject ITrackService TrackService
+@inject IResultPopupService ResultPopupService
 
 <PageLoadWrapper Result="albumResult">
 	<AoBoxLoader Loading="isLoading">
@@ -25,11 +27,13 @@
 					<AoTextField Label="Track Count" Value="@albumResult.Value.TrackCount.ToString()" Disabled />
 				</AoPanel>
 				<AoPanel Title="Actions">
+					<AoResultMessages Result="actionResult" />
+
 					<AoButton Red Label="Delete" />
 
 					@if (albumResult!.Value.Tracks.Any(x => x.Status is TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed))
 					{
-						<AoButton Primary Label="Retry All" />
+						<AoButton Primary Label="Retry All" OnClick="RetryAllAsync" />
 					}
 				</AoPanel>
 			</AoColumn>
@@ -77,6 +81,7 @@
 @code {
 	bool isLoading = true;
 	ValueResult<Album>? albumResult;
+	IResult? actionResult;
 
 	[Parameter]
 	public int Id { get; set; }
@@ -85,6 +90,16 @@
 	{
 		isLoading = true;
 		albumResult = await AlbumService.GetAlbumAsync(Id, AlbumFields.Artists | AlbumFields.Tracks);
+		isLoading = false;
+	}
+
+	protected async Task RetryAllAsync()
+	{
+		actionResult = null;
+		isLoading = true;
+		actionResult =
+			await TrackService.RetryAllTracksAsync(Id)
+				.WithSuccessMessage("Successfully started retrying tracks.");
 		isLoading = false;
 	}
 }

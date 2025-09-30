@@ -22,6 +22,7 @@ public static class ServiceCollectionExtensions
 
         // Metadata
         services.TryAddRestClient<IAlbumService, AlbumService>(clientName);
+        services.TryAddRestClient<ITrackService, TrackService>(clientName);
         services.TryAddRestClient<IAlbumCreationService, AlbumCreationService>(clientName);
         services.TryAddRestClient<IArtistCreationService, ArtistCreationService>(clientName);
 

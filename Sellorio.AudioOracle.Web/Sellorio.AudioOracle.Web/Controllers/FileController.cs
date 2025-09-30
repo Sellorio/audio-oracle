@@ -1,10 +1,7 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using System.Net.Http;
-using System.Net.Mime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Services.Content;
 
 namespace Sellorio.AudioOracle.Web.Controllers;
@@ -21,14 +18,7 @@ public class FileController(IFileService fileService, IHttpClientFactory httpCli
 
         if (fileResult.WasSuccess)
         {
-            var mimeType = fileResult.Value.Type switch
-            {
-                FileType.ImageJpeg => MediaTypeNames.Image.Jpeg,
-                FileType.ImagePng => MediaTypeNames.Image.Png,
-                FileType.Unspecified => MediaTypeNames.Application.Octet,
-                _ => throw new NotSupportedException("Unexpected file type.")
-            };
-
+            var mimeType = fileResult.Value.MimeType;
             return File(fileResult.Value.Content.Data, mimeType);
         }
         else if (fileResult.Messages.Any(x => x.Severity == Library.Results.Messages.ResultMessageSeverity.NotFound))

@@ -10,19 +10,25 @@ using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
+using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.Metadata;
 
 namespace Sellorio.AudioOracle.Services.TaskQueue.Handlers;
 
 internal class DownloadTrack(
     DatabaseContext databaseContext,
     ILogger<DownloadTrack> logger,
-    IProviderInvocationService providerInvocationService) : ITaskHandler
+    IProviderInvocationService providerInvocationService,
+    IFileTagsService fileTagsService,
+    IMetadataMapper metadataMapper) : ITaskHandler
 {
     public async Task HandleAsync(TaskHandlerContext context)
     {
         var trackData =
             await databaseContext.Tracks
-                .Include(x => x.Album)
+                .Include(x => x.Artists)!.ThenInclude(x => x.Artist)
+                .Include(x => x.Album).ThenInclude(x => x!.AlbumArt)
+                .Include(x => x.Album).ThenInclude(x => x!.Artists)!.ThenInclude(x => x.Artist)
                 .SingleOrDefaultAsync(x => x.Id == context.ObjectId!.Value);
 
         if (trackData == null)
@@ -37,7 +43,11 @@ internal class DownloadTrack(
             return;
         }
 
+        var track = metadataMapper.Map(trackData);
+        var album = metadataMapper.Map(trackData.Album!);
+
         var trackFileName = $"{trackData.TrackNumber} - {EscapePathItem(trackData.Title!)}.mp3";
+        var downloadFilename = Path.Combine(Path.GetTempPath(), trackFileName);
         var filename = Path.Combine("/music", trackData.Album!.FolderName, trackFileName);
         var resolvedIds = new ResolvedIds { SourceId = trackData.DownloadSourceId!, SourceUrlId = trackData.DownloadSourceUrlId! };
 
@@ -45,7 +55,10 @@ internal class DownloadTrack(
 
         try
         {
-            downloadResult = await providerInvocationService.InvokeAsync<IDownloadProvider>(trackData.DownloadSource!, x => x.DownloadTrackAsync(resolvedIds, filename));
+            downloadResult =
+                await providerInvocationService.InvokeAsync<IDownloadProvider>(
+                    trackData.DownloadSource!,
+                    x => x.DownloadTrackAsync(resolvedIds, downloadFilename));
         }
         catch (Exception ex)
         {
@@ -73,6 +86,25 @@ internal class DownloadTrack(
             await databaseContext.SaveChangesAsync();
             return;
         }
+
+        var tagsResult = await fileTagsService.UpdateFileTagsAsync(downloadFilename, album, track);
+
+        if (!tagsResult.WasSuccess)
+        {
+            trackData.Status = TrackStatus.DownloadFailed;
+            trackData.StatusText = string.Join(" ", tagsResult.Messages.Select(x => x.Text));
+            await databaseContext.SaveChangesAsync();
+            return;
+        }
+
+        var outputDirectory = Path.GetDirectoryName(filename)!;
+
+        if (!Directory.Exists(outputDirectory))
+        {
+            Directory.CreateDirectory(outputDirectory);
+        }
+
+        File.Move(downloadFilename, filename);
 
         trackData.Filename = filename;
         trackData.Status = TrackStatus.Imported;

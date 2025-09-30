@@ -10,7 +10,7 @@ public class Track
     public required int AlbumId { get; init; }
     public required int? AlbumArtOverrideId { get; init; }
     public required FileInfo? AlbumArtOverride { get; init; }
-    public required bool IsRequested { get; init; }
+    public required bool IsRequested { get; set; } /* AutoMapper does not work for this property for some reason so it has to be settable */
     public required TrackStatus Status { get; init; }
     public required string StatusText { get; init; }
     public required string Filename { get; init; }

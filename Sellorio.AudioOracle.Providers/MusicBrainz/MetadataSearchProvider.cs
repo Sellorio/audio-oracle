@@ -22,8 +22,8 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
         var recordingsSearchResult = await SearchRecordingsAsync(searchText, pageSize);
         var releasesSearchResult = await SearchReleasesAsync(searchText, pageSize);
 
-        var recordingCount = recordingsSearchResult.Count;
-        var releaseCount = releasesSearchResult.Count;
+        var recordingCount = recordingsSearchResult.Recordings.Count;
+        var releaseCount = releasesSearchResult.Releases.Count;
 
         var recordingIndex = 0;
         var releaseIndex = 0;
@@ -173,13 +173,13 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
         var result = 0;
 
         result += (release.Date?.Year ?? release.ReleaseYear ?? 9999) * 1000;   // asc release date, then
-        result += release.Media.Sum(x => x.TrackCount);                         // asc track count
+        result += release.Media!.Sum(x => x.TrackCount);                         // asc track count
 
         return result;
     }
 
     private bool ReleaseMinimumRequirements(ReleaseDto release)
     {
-        return release.Media.All(x => x.Format is "CD" or "Digital Media");
+        return release.Media!.All(x => x.Format is "CD" or "Digital Media");
     }
 }

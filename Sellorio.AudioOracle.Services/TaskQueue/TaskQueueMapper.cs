@@ -4,7 +4,7 @@ using Sellorio.AudioOracle.Models.TaskQueue;
 
 namespace Sellorio.AudioOracle.Services.TaskQueue;
 
-internal class TaskQueueMapper : StaticMapperBase<TaskQueueMapper>, ITaskQueueMapper
+internal class TaskQueueMapper : MapperBase, ITaskQueueMapper
 {
     public QueuedTask Map(QueuedTaskData from) => Map<QueuedTask>(from);
 }

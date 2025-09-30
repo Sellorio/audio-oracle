@@ -1,4 +1,8 @@
-﻿namespace Sellorio.AudioOracle.Models.Content;
+﻿using System;
+using System.Net.Mime;
+using System.Text.Json.Serialization;
+
+namespace Sellorio.AudioOracle.Models.Content;
 
 public class FileInfo
 {
@@ -7,4 +11,13 @@ public class FileInfo
     public required FileType Type { get; init; }
     public required int Size { get; init; }
     public required FileContent? Content { get; init; }
+
+    [JsonIgnore]
+    public string MimeType => Type switch
+    {
+        FileType.ImageJpeg => MediaTypeNames.Image.Jpeg,
+        FileType.ImagePng => MediaTypeNames.Image.Png,
+        FileType.Unspecified => MediaTypeNames.Application.Octet,
+        _ => throw new NotSupportedException("Unexpected file type.")
+    };
 }

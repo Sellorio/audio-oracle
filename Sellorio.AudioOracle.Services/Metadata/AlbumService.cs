@@ -33,7 +33,9 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
             return ResultMessage.NotFound("Album");
         }
 
-        return mapper.Map(data);
+        var model = mapper.Map(data);
+
+        return model;
     }
 
     public async Task<Result> DeleteAlbumAsync(int id, bool deleteFiles = true)

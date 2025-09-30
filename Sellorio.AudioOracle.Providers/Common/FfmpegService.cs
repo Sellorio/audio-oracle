@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
@@ -12,29 +11,32 @@ using Sellorio.AudioOracle.Providers.YouTube;
 
 namespace Sellorio.AudioOracle.Providers.Common;
 
-internal class FfmpegService(HttpClient httpClient) : IFfmpegService
+internal class FfmpegService : IFfmpegService
 {
-    private const string DownloadUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-lgpl.zip";
     private static readonly SemaphoreSlim semaphore = new(1);
 
     public async Task<Result> ConvertToMp3Async(string source, string destination, int outputBitrateKbps, bool loudnessNormalization)
     {
         await EnsureFfmpegExecutableAsync();
 
+        var destinationDirectory = Path.GetDirectoryName(destination)!;
+
+        if (!Directory.Exists(destinationDirectory))
+        {
+            Directory.CreateDirectory(destinationDirectory);
+        }
+
         // According to ChatGPT loudnorm should be -14 and TP should be -1 but for my test track these numbers felt more accurate
         var filters = loudnessNormalization ? "-af \"loudnorm=I=-12:TP=0:LRA=11\"" : "";
         var tagsFormat = "-id3v2_version 3 -write_id3v1 1";
         var bitrate = $"-ab {outputBitrateKbps}k";
 
-        var startInfo =
-            new ProcessStartInfo(
-                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "ffmpeg.exe"),
-                $"-y -i \"{source}\" {filters} {tagsFormat} {bitrate} \"{destination}\"")
-            {
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true
-            };
+        var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{source}\" {filters} {tagsFormat} {bitrate} \"{destination}\"")
+        {
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
 
         var process = Process.Start(startInfo);
 
@@ -51,7 +53,7 @@ internal class FfmpegService(HttpClient httpClient) : IFfmpegService
         return Result.Success();
     }
 
-    private async Task EnsureFfmpegExecutableAsync()
+    public async Task EnsureFfmpegExecutableAsync()
     {
         if (File.Exists(Constants.FfmpegPath))
         {
@@ -62,15 +64,19 @@ internal class FfmpegService(HttpClient httpClient) : IFfmpegService
 
         try
         {
-            if (File.Exists(Constants.FfmpegPath)) // file was downloaded while we waited for the semaphore to unlock
+            if (File.Exists(Constants.FfmpegPath)) // file was "downloaded" while we waited for the semaphore to unlock
             {
                 return;
             }
 
-            using var downloadStream = await httpClient.GetStreamAsync(DownloadUrl);
-            using var zip = new ZipArchive(downloadStream, ZipArchiveMode.Read, true);
-            var entry = zip.Entries.First(x => x.Name == "ffmpeg.exe");
-            entry.ExtractToFile(Constants.FfmpegPath);
+            // Wanted to download FFMPEG from https://github.com/BtbN/FFmpeg-Builds at runtime but unzipping a .tar.xz file is seamingly imposssible
+            using (var manifestStream = typeof(FfmpegService).Assembly.GetManifestResourceStream(typeof(FfmpegService).Namespace + ".ffmpeg.zip")!)
+            using (var zipArchive = new ZipArchive(manifestStream))
+            {
+                zipArchive.Entries[0].ExtractToFile(Constants.FfmpegPath);
+            }
+
+            await Process.Start("chmod", $"+x {Constants.FfmpegPath}")!.WaitForExitAsync();
         }
         finally
         {

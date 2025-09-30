@@ -3,7 +3,8 @@ using Sellorio.AudioOracle.Library.Results;
 
 namespace Sellorio.AudioOracle.Providers.Common;
 
-internal interface IFfmpegService
+public interface IFfmpegService
 {
     Task<Result> ConvertToMp3Async(string source, string destination, int outputBitrateKbps, bool loudnessNormalization);
+    Task EnsureFfmpegExecutableAsync();
 }

@@ -1,0 +1,38 @@
+﻿using System.Threading.Tasks;
+using MudBlazor;
+using Sellorio.AudioOracle.Library.Results;
+using Sellorio.AudioOracle.Library.Results.Messages;
+
+namespace Sellorio.AudioOracle.Web.Client.Library.Services;
+
+internal class ResultPopupService(ISnackbar snackbarService) : IResultPopupService
+{
+    public Task ShowResultAsPopupAsync(IResult result)
+    {
+        if (result == null)
+        {
+            return Task.CompletedTask;
+        }
+
+        foreach (var message in result.Messages)
+        {
+            snackbarService.Add(message.Text, ConvertSeverity(message.Severity), o =>
+            {
+                o.VisibleStateDuration = 5000;
+            });
+        }
+
+        return Task.CompletedTask;
+    }
+
+    private static Severity ConvertSeverity(ResultMessageSeverity severity)
+    {
+        return severity switch
+        {
+            ResultMessageSeverity.Critical or ResultMessageSeverity.Error or ResultMessageSeverity.NotFound => Severity.Error,
+            ResultMessageSeverity.Warning => Severity.Warning,
+            ResultMessageSeverity.Information => Severity.Info,
+            _ => throw new System.NotSupportedException()
+        };
+    }
+}

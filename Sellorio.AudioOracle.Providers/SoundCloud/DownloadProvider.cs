@@ -25,7 +25,7 @@ internal partial class DownloadProvider(SoundCloudClient soundCloudClient, IFfmp
 
         try
         {
-            await ffmpegService.ConvertToMp3Async(tempFilename, outputFilename, outputBitrateKbps: 256, loudnessNormalization: true);
+            await ffmpegService.ConvertToMp3Async(tempFilename, outputFilename, outputBitrateKbps: 256, loudnessNormalization: false);
         }
         finally
         {

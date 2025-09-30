@@ -39,10 +39,12 @@ public static class ServiceCollectionExtensions
             // Content
             .AddScoped<IContentMapper, ContentMapper>()
             .AddScoped<IFileService, FileService>()
+            .AddScoped<IFileTagsService, FileTagsService>()
 
             // Metadata
             .AddScoped<IMetadataMapper, MetadataMapper>()
             .AddScoped<IAlbumService, AlbumService>()
+            .AddScoped<ITrackService, TrackService>()
             .AddScoped<IArtistCreationService, ArtistCreationService>()
             .AddScoped<IAlbumCreationService, AlbumCreationService>()
 

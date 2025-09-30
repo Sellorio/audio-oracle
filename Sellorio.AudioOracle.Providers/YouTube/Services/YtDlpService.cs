@@ -2,22 +2,19 @@
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Octokit;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
+using Sellorio.AudioOracle.Providers.Common;
 
 namespace Sellorio.AudioOracle.Providers.YouTube.Services;
 
-internal class YtDlpService(HttpClient httpClient) : IYtDlpService
+internal class YtDlpService(HttpClient httpClient, IFfmpegService ffmpegService) : IYtDlpService
 {
-    private const string ExePath = "/data/yt-dlp.exe";
-    private static readonly TimeSpan _checkInterval = TimeSpan.FromHours(1);
+    private const string ExePath = "/data/yt-dlp";
     private static readonly SemaphoreSlim _semaphore = new(1);
-    private static DateTime _lastChecked;
 
     public async Task<Result> InvokeYtDlpAsync(string arguments, string outputDirectory = "")
     {
@@ -26,6 +23,11 @@ internal class YtDlpService(HttpClient httpClient) : IYtDlpService
         try
         {
             await EnsureLatestYtDlpExecutableAsync();
+
+            if (arguments.Contains("ffmpeg"))
+            {
+                await ffmpegService.EnsureFfmpegExecutableAsync();
+            }
 
             var startInfo = new ProcessStartInfo(ExePath, arguments)
             {
@@ -64,26 +66,12 @@ internal class YtDlpService(HttpClient httpClient) : IYtDlpService
     {
         if (File.Exists(ExePath))
         {
-            if (_lastChecked + _checkInterval > DateTime.Now)
-            {
-                return;
-            }
-
-            var version = FileVersionInfo.GetVersionInfo(ExePath).FileVersion;
-            var client = new GitHubClient(ProductHeaderValue.Parse(ProviderConstants.UserAgent));
-            var releases = await client.Repository.Release.GetAll("yt-dlp", "yt-dlp", new() { StartPage = 1, PageSize = 1 });
-            var release = releases[0];
-
-            // we have the latest vesion
-            if (release.TagName == version)
-            {
-                _lastChecked = DateTime.Now;
-                return;
-            }
+            return;
         }
 
-        using var fileStream = new FileStream(ExePath, System.IO.FileMode.Create, FileAccess.Write);
-        var downloadStream = await httpClient.GetStreamAsync("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe");
+        using var fileStream = new FileStream(ExePath, FileMode.Create, FileAccess.Write);
+        var downloadStream = await httpClient.GetStreamAsync("https://github.com/yt-dlp/yt-dlp/releases/download/2025.09.23/yt-dlp_linux");
         await downloadStream.CopyToAsync(fileStream);
+        await Process.Start("chmod", $"+x {ExePath}")!.WaitForExitAsync();
     }
 }

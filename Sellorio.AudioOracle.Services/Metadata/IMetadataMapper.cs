@@ -1,12 +1,9 @@
 ﻿using Sellorio.AudioOracle.Data.Metadata;
+using Sellorio.AudioOracle.Library.Mapping;
 using Sellorio.AudioOracle.Models.Metadata;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
-public interface IMetadataMapper
+public interface IMetadataMapper : IMap<AlbumData, Album>, IMap<ArtistData, Artist>, IMap<ArtistNameData, ArtistName>, IMap<TrackData, Track>, IMap<AlbumArtistData, Artist>, IMap<TrackArtistData, Artist>
 {
-    Album Map(AlbumData from);
-    Artist Map(ArtistData from);
-    ArtistName Map(ArtistNameData from);
-    Track Map(TrackData from);
 }

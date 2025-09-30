@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using MudBlazor.Services;
 using Sellorio.AudioOracle.Client;
 using Sellorio.AudioOracle.Client.Sessions;
+using Sellorio.AudioOracle.Web.Client.Library;
 using Sellorio.AudioOracle.Web.Client.Services;
 
 [assembly: InternalsVisibleTo("Sellorio.AudioOracle.Web.Client.UnitTests")]
@@ -16,6 +17,7 @@ builder.Services.AddSingleton<Microsoft.AspNetCore.Components.Authorization.Auth
 
 builder.Services.AddAudioOracleClientSideServices<SessionTokenProvider>(builder.HostEnvironment.BaseAddress);
 builder.Services.AddMudServices();
+builder.Services.AddAoServices();
 
 builder.Services.AddSingleton<ILocalStorageService, LocalStorageService>();
 builder.Services.AddSingleton<IAudioOracleSessionTokenProvider, SessionTokenProvider>();

@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="TagLibSharp" Version="2.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Sellorio.AudioOracle.Data\Sellorio.AudioOracle.Data.csproj" />
     <ProjectReference Include="..\Sellorio.AudioOracle.Providers\Sellorio.AudioOracle.Providers.csproj" />
     <ProjectReference Include="..\Sellorio.AudioOracle.ServiceInterfaces\Sellorio.AudioOracle.ServiceInterfaces.csproj" />

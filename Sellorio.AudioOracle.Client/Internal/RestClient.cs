@@ -110,15 +110,23 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
             case TimeSpan timeSpanValue:
                 return timeSpanValue.ToString(@"HH\:mm\:ss");
             case Enum enumValue:
-                return
-                    string.Join(
-                        ',',
-                        Enum.GetValues(enumValue.GetType())
-                            .Cast<Enum>()
-                            .Where(x => (int)Convert.ChangeType(x, typeof(int)) != 0)
-                            .Where(enumValue.HasFlag)
-                            .Select(x => x.ToString())
-                            .ToArray());
+                var enumValues = Enum.GetValues(enumValue.GetType()).Cast<Enum>().ToArray();
+
+                if (enumValues.Any(x => x.Equals(enumValue)))
+                {
+                    return enumValue.ToString();
+                }
+                else
+                {
+                    return
+                        string.Join(
+                            ',',
+                            enumValues
+                                .Where(x => (int)Convert.ChangeType(x, typeof(int)) != 0)
+                                .Where(enumValue.HasFlag)
+                                .Select(x => x.ToString())
+                                .ToArray());
+                }
         }
 
         if (!allowObjects)
