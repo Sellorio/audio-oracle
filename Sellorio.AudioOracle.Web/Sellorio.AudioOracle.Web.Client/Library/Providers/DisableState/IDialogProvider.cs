@@ -7,5 +7,6 @@ namespace Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState;
 
 public interface IDialogProvider
 {
-    Task<ValueResult<TResult>> ShowDialog<TResult>(Expression<Func<AoDialogBase<TResult>>> expression);
+    Task<ValueResult<TResult>> ShowDialogAsync<TResult>(Expression<Func<AoDialogBase<TResult>>> expression);
+    Task<Result> ShowDialogAsync(Expression<Func<AoDialogBase>> expression);
 }

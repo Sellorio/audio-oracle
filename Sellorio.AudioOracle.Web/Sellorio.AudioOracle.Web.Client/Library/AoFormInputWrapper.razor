@@ -1,10 +1,10 @@
 ﻿<MudGrid Spacing="2">
-	<MudItem xs="12" md="5">
+	<MudItem xs="NoWrapOnMobile ? 5 : 12" md="NoWrapOnMobile ? 0 : 5">
 		<div class="@($"pt-{LabelSpacing}")">
 			<AoLabel>@Label</AoLabel>
 		</div>
 	</MudItem>
-	<MudItem xs="12" md="7">
+	<MudItem xs="NoWrapOnMobile ? 7 : 12" md="NoWrapOnMobile ? 0 : 7">
 		@ChildContent
 	</MudItem>
 </MudGrid>
@@ -18,4 +18,7 @@
 
 	[Parameter]
 	public RenderFragment? ChildContent { get; set; }
+
+	[Parameter]
+	public bool NoWrapOnMobile { get; set; }
 }

@@ -78,6 +78,23 @@ internal class FileService(IHttpClientFactory httpClientFactory, DatabaseContext
         return model;
     }
 
+    public async Task<Result> DeleteAsync(int fileInfoId)
+    {
+        var data = await databaseContext.FileInfos.Include(x => x.Content).SingleOrDefaultAsync(x => x.Id == fileInfoId);
+
+        if (data == null)
+        {
+            return ResultMessage.NotFound("File");
+        }
+
+        databaseContext.FileInfos.Remove(data);
+        databaseContext.FileContents.Remove(data.Content!);
+
+        await databaseContext.SaveChangesAsync();
+
+        return Result.Success();
+    }
+
     private async Task<string> GenerateFileUrlIdAsync()
     {
         const string characters = "abcdefghijklmnopqrstuvwxyz1234567890";

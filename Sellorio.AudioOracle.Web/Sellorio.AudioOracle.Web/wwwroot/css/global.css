@@ -1,0 +1,7 @@
+﻿html, body {
+    height: 100%;
+}
+
+.mud-dialog {
+    max-width: calc(100% - 20px);
+}

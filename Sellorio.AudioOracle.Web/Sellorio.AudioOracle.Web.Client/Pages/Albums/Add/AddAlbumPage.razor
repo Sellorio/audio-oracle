@@ -91,7 +91,7 @@
 
 	async Task SelectSearchResultAsync(SearchResult item)
 	{
-		var result = await DialogProvider.ShowDialog(() => new AddAlbumDialog { SearchResult = item });
+		var result = await DialogProvider.ShowDialogAsync(() => new AddAlbumDialog { SearchResult = item });
 
 		if (result.WasSuccess)
 		{

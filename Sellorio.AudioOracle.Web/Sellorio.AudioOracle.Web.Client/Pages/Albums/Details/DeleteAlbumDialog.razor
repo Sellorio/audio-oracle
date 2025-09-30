@@ -1,0 +1,37 @@
+﻿@using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@inherits AoDialogBase
+@inject IAlbumService AlbumService
+
+<AoDialogLayout Title="Delete Album">
+	<AoBoxLoader Loading="isDeleting">
+		<AoForm OnValidSubmit="DeleteAlbumAsync">
+			<AoCheckboxField Label="Delete Files?" @bind-Value="deleteFiles" />
+			<AoResultMessages Result="deleteResult" />
+			<AoFormButtons>
+				<AoSubmit Label="Delete" />
+				<AoCancel OnClick="CloseDialog" />
+			</AoFormButtons>
+		</AoForm>
+	</AoBoxLoader>
+</AoDialogLayout>
+
+@code {
+	bool isDeleting;
+	bool deleteFiles = true;
+	Result? deleteResult;
+
+	[Parameter, EditorRequired]
+	public required int AlbumId { get; set; }
+
+	async Task DeleteAlbumAsync()
+	{
+		isDeleting = true;
+		deleteResult = await AlbumService.DeleteAlbumAsync(AlbumId, deleteFiles);
+		isDeleting = false;
+
+		if (deleteResult.WasSuccess)
+		{
+			CloseDialog();
+		}
+	}
+}

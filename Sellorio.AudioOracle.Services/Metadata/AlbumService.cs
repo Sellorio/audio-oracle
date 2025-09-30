@@ -6,6 +6,7 @@ using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
+using Sellorio.AudioOracle.Services.Content;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
-internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper) : IAlbumService
+internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper, IFileService fileService) : IAlbumService
 {
     public async Task<ValueResult<IList<Album>>> GetAlbumsAsync(AlbumFields fields = AlbumFields.None)
     {
@@ -40,59 +41,38 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
 
     public async Task<Result> DeleteAlbumAsync(int id, bool deleteFiles = true)
     {
-        var query = WithFields(databaseContext.Albums, AlbumFields.Tracks);
-        var data = await query.SingleOrDefaultAsync(x => x.Id == id);
-
-        if (data == null)
+        return await databaseContext.WithTransaction(async transaction =>
         {
-            return ResultMessage.NotFound("Album");
-        }
+            var query = WithFields(databaseContext.Albums, AlbumFields.Tracks | AlbumFields.Artists);
+            var data = await query.SingleOrDefaultAsync(x => x.Id == id);
 
-        databaseContext.Albums.Remove(data);
-
-        if (deleteFiles)
-        {
-            foreach (var track in data.Tracks!)
+            if (data == null)
             {
-                track.Status = TrackStatus.DeleteRequested;
+                return ResultMessage.NotFound("Album");
             }
 
-            await AttemptToTracksAsync(data.Tracks);
-        }
-        else
-        {
+            databaseContext.Albums.Remove(data);
+            databaseContext.AlbumArtists.RemoveRange(data.Artists!);
             databaseContext.Tracks.RemoveRange(data.Tracks!);
-        }
+            databaseContext.TrackArtists.RemoveRange(data.Tracks!.SelectMany(x => x.Artists!));
 
-        await databaseContext.SaveChangesAsync();
-
-        return Result.Success();
-    }
-
-    private Task AttemptToTracksAsync(IList<TrackData> data)
-    {
-        foreach (var track in data)
-        {
-            try
+            if (deleteFiles)
             {
-                if (track.Filename != null && File.Exists(track.Filename))
+                try
                 {
-                    File.Delete(track.Filename);
+                    Directory.Delete(Path.Combine("/music", data.FolderName), true);
                 }
-
-                databaseContext.Tracks.Remove(track);
+                catch (Exception ex)
+                {
+                    logger.LogException(ex, "Failed to delete album files.");
+                }
             }
-            catch (Exception ex)
-            {
-                logger.LogError(
-                    "Failed to delete track file \"{TrackFilename}\":\r\n{ExceptionType}:\r\n{ExceptionMessage}",
-                    track.Filename,
-                    ex.GetType().AssemblyQualifiedName,
-                    ex.Message);
-            }
-        }
 
-        return Task.CompletedTask;
+            await databaseContext.SaveChangesAsync();
+            await fileService.DeleteAsync(data.AlbumArtId!.Value);
+
+            return Result.Success();
+        });
     }
 
     private static IQueryable<AlbumData> WithFields(IQueryable<AlbumData> query, AlbumFields fields)

@@ -10,7 +10,25 @@ namespace Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState;
 
 internal class DialogProvider(DisableStateScope disableStateScope, IDialogService dialogService) : IDialogProvider
 {
-    public async Task<ValueResult<TResult>> ShowDialog<TResult>(Expression<Func<AoDialogBase<TResult>>> expression)
+    public async Task<Result> ShowDialogAsync(Expression<Func<AoDialogBase>> expression)
+    {
+        var result = await ShowDialogInternalAsync(expression);
+        return result.AsResult();
+    }
+
+    public async Task<ValueResult<TResult>> ShowDialogAsync<TResult>(Expression<Func<AoDialogBase<TResult>>> expression)
+    {
+        var result = await ShowDialogInternalAsync(expression);
+
+        if (!result.WasSuccess)
+        {
+            return ValueResult<TResult>.Failure(result.Messages);
+        }
+
+        return (TResult)result.Value.Data!;
+    }
+
+    private async Task<ValueResult<DialogResult>> ShowDialogInternalAsync(LambdaExpression expression)
     {
         if (disableStateScope.IsDisabled)
         {
@@ -45,6 +63,6 @@ internal class DialogProvider(DisableStateScope disableStateScope, IDialogServic
             return ResultMessage.Error("Action was cancelled.");
         }
 
-        return (TResult)result.Data!;
+        return result;
     }
 }

@@ -36,6 +36,9 @@
 	public bool Red { get; set; }
 
 	[Parameter]
+	public bool Weak { get; set; }
+
+	[Parameter]
 	public bool Loading { get; set; }
 
 	async Task HandleClick()
@@ -57,6 +60,6 @@
 
 	private Variant GetButtonVariant()
 	{
-		return Variant.Filled;
+		return Weak ? Variant.Outlined : Variant.Filled;
 	}
 }

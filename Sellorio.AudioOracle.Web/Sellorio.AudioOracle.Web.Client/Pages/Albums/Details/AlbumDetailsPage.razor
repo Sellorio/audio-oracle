@@ -1,6 +1,8 @@
 ﻿@page "/albums/{Id:int}"
 @using Sellorio.AudioOracle.Models.Metadata
 @using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
+@inject NavigationManager NavigationManager
 @inject IAlbumService AlbumService
 @inject ITrackService TrackService
 @inject IResultPopupService ResultPopupService
@@ -29,7 +31,7 @@
 				<AoPanel Title="Actions">
 					<AoResultMessages Result="actionResult" />
 
-					<AoButton Red Label="Delete" />
+					<AoButton Red Label="Delete" OnClick="OpenDeleteDialogAsync" />
 
 					@if (albumResult!.Value.Tracks.Any(x => x.Status is TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed))
 					{
@@ -83,6 +85,9 @@
 	ValueResult<Album>? albumResult;
 	IResult? actionResult;
 
+	[CascadingParameter]
+	public required IDialogProvider DialogProvider { get; set; }
+
 	[Parameter]
 	public int Id { get; set; }
 
@@ -93,7 +98,7 @@
 		isLoading = false;
 	}
 
-	protected async Task RetryAllAsync()
+	private async Task RetryAllAsync()
 	{
 		actionResult = null;
 		isLoading = true;
@@ -101,5 +106,15 @@
 			await TrackService.RetryAllTracksAsync(Id)
 				.WithSuccessMessage("Successfully started retrying tracks.");
 		isLoading = false;
+	}
+
+	private async Task OpenDeleteDialogAsync()
+	{
+		var deleteResult = await DialogProvider.ShowDialogAsync(() => new DeleteAlbumDialog { AlbumId = Id });
+
+		if (deleteResult.WasSuccess)
+		{
+			NavigationManager.NavigateTo("/albums");
+		}
 	}
 }

@@ -7,5 +7,6 @@ namespace Sellorio.AudioOracle.Services.Content;
 public interface IFileService
 {
     Task<ValueResult<FileInfo>> CreateFileFromUrlAsync(string url, params FileType[] acceptedTypes);
+    Task<Result> DeleteAsync(int fileInfoId);
     Task<ValueResult<FileInfo>> GetByUrlIdAsync(string urlId);
 }
