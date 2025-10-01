@@ -16,7 +16,7 @@ internal class DownloadSearchProvider(SoundCloudClient soundCloudClient) : IDown
     {
         var rawResults =
             await soundCloudClient.Search
-                .GetTracksAsync(searchCriteria.TrackTitle + " " + searchCriteria.MainArtist)
+                .GetTracksAsync(searchCriteria.TrackTitle + (searchCriteria.MainArtist == null ? "" : " " + searchCriteria.MainArtist))
                 .Take(pageSize)
                 .ToArrayAsync();
 

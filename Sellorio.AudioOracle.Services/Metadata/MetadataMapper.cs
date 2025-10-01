@@ -30,11 +30,11 @@ internal class MetadataMapper(IContentMapper contentMapper) : MapperBase(content
 
     public Artist Map(AlbumArtistData from)
     {
-        return Map(from.Artist ?? throw new InvalidOperationException("Artist is missing."));
+        return from.Artist == null ? null! : Map(from.Artist);
     }
 
     public Artist Map(TrackArtistData from)
     {
-        return Map(from.Artist ?? throw new InvalidOperationException("Artist is missing."));
+        return from.Artist == null ? null! : Map(from.Artist);
     }
 }

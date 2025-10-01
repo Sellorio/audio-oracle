@@ -1,0 +1,11 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudMenuItem Label="@Title" OnClick="OnClick" Disabled="DisableContent" />
+
+@code {
+	[Parameter, EditorRequired]
+	public string Title { get; set; }
+
+	[Parameter]
+	public EventCallback OnClick { get; set; }
+}

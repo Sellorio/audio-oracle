@@ -1,0 +1,114 @@
+﻿@using Sellorio.AudioOracle.Models.Metadata
+@using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
+@inject ITrackService TrackService
+@inject IResultPopupService ResultPopupService
+
+<tr>
+	<td>@Track.TrackNumber</td>
+	<td>@Track.Title</td>
+	<td>@Track.AlternateTitle</td>
+	<td>@(Track.Duration == null ? null : $"{(int)Track.Duration.Value.TotalMinutes}:{Track.Duration.Value.Seconds}")</td>
+	<td>
+		@{
+			var statusTitle = Track.Status.GetDisplay(out var statusDescription);
+		}
+
+		<AoStatusIcon StatusTitle="@statusTitle" StatusDescription="@(Track.StatusText ?? statusDescription)"
+					  Loading="Track.Status is TrackStatus.MissingMetadata or TrackStatus.Downloading"
+					  Failed="Track.Status is TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed"
+					  Downloading="Track.Status is TrackStatus.Downloading"
+					  TurnedOff="Track.Status == TrackStatus.NotRequested"
+					  DownloadComplete="Track.Status == TrackStatus.Imported" />
+	</td>
+	<td>
+		<AoActionsDropdown Loading="isRunningAction">
+			@if (Track.IsRequested)
+			{
+				var disabled = Track.Status is not TrackStatus.Imported and not TrackStatus.MetadataRetrievalFailed and not TrackStatus.DownloadFailed and not TrackStatus.MissingDownloadSource;
+
+				<AoTooltip Text="@(disabled ? "Track must not be retrieving metadata/downloading." : null)">
+					<AoAction Title="Unrequest Track" OnClick="UnrequestTrackAsync" Disabled="disabled" />
+				</AoTooltip>
+			}
+			else
+			{
+				var disabled = Track.Status is not TrackStatus.NotRequested;
+
+				<AoTooltip Text="@(disabled ? "Track must be in Not Requested status (after retrieving metadata)." : null)">
+					<AoAction Title="Request Track" OnClick="RequestTrackAsync" Disabled="disabled" />
+				</AoTooltip>
+			}
+
+			<AoActionSeparator />
+
+			@{
+				var changeDownloadSourceDisabled = Track.Status is TrackStatus.Downloading or TrackStatus.MissingMetadata;
+			}
+
+			<AoTooltip Text="@(changeDownloadSourceDisabled ? "Cannot change download source while track is processing." : null)">
+				<AoAction Title="Change Download Source" OnClick="ChangeDownloadSourceAsync" Disabled="changeDownloadSourceDisabled" />
+			</AoTooltip>
+		</AoActionsDropdown>
+	</td>
+</tr>
+
+@code {
+	bool isRunningAction;
+
+	[CascadingParameter]
+	public required IDialogProvider DialogProvider { get; set; }
+
+	[Parameter, EditorRequired]
+	public Track Track { get; set; }
+
+	async Task RequestTrackAsync()
+	{
+		isRunningAction = true;
+		var result = await TrackService.RequestTrackAsync(Track.AlbumId, Track.Id);
+		isRunningAction = false;
+
+		await ResultPopupService.ShowResultAsPopupAsync(result, "Track requested successfully.");
+
+		if (result.WasSuccess)
+		{
+			Track.Status = result.Value.Status;
+			Track.StatusText = result.Value.StatusText;
+			Track.IsRequested = result.Value.IsRequested;
+		}
+	}
+
+	async Task UnrequestTrackAsync()
+	{
+		isRunningAction = true;
+		var result = await TrackService.UnrequestTrackAsync(Track.AlbumId, Track.Id, true);
+		isRunningAction = false;
+
+		await ResultPopupService.ShowResultAsPopupAsync(result, "Track unrequested successfully.");
+
+		if (result.WasSuccess)
+		{
+			Track.Status = result.Value.Status;
+			Track.StatusText = result.Value.StatusText;
+			Track.IsRequested = result.Value.IsRequested;
+			Track.Filename = result.Value.Filename;
+		}
+	}
+
+	async Task ChangeDownloadSourceAsync()
+	{
+		isRunningAction = true;
+		var result = await DialogProvider.ShowDialogAsync(() => new ChangeDownloadSourceDialog { Track = Track });
+		isRunningAction = false;
+
+		if (result.WasSuccess)
+		{
+			Track.Status = result.Value.Status;
+			Track.StatusText = result.Value.StatusText;
+			Track.DownloadSource = result.Value.DownloadSource;
+			Track.DownloadSourceId = result.Value.DownloadSourceId;
+			Track.DownloadSourceUrlId = result.Value.DownloadSourceUrlId;
+			Track.Filename = result.Value.Filename;
+		}
+	}
+}

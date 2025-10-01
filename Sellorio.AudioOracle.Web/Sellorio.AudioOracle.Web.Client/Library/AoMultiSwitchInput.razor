@@ -2,10 +2,14 @@
 @inherits Base.AoDisableComponent
 
 <div class="ao-multi-switch">
-	@foreach (var option in Options)
+	@foreach (var o in Options)
 	{
+		var option = o;
+
 		<button class="@("option" + (Equals(option, SelectedOption) ? " selected" : ""))"
-			    disabled="@(DisableContent || DisabledFunc?.Invoke(option) == true)">
+				type="button"
+			    disabled="@(DisableContent || DisabledFunc?.Invoke(option) == true)"
+				@onclick="() => { SelectedOption = option; return SelectedOptionChanged.InvokeAsync(option); }">
 			@(LabelFunc == null ? option?.ToString() : LabelFunc.Invoke(option))
 		</button>
 	}

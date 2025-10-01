@@ -7,19 +7,29 @@ namespace Sellorio.AudioOracle.Web.Client.Library.Services;
 
 internal class ResultPopupService(ISnackbar snackbarService) : IResultPopupService
 {
-    public Task ShowResultAsPopupAsync(IResult result)
+    public Task ShowResultAsPopupAsync(IResult result, string? successMessage)
     {
         if (result == null)
         {
             return Task.CompletedTask;
         }
 
-        foreach (var message in result.Messages)
+        if (result.Messages.Count == 0 && successMessage != null)
         {
-            snackbarService.Add(message.Text, ConvertSeverity(message.Severity), o =>
+            snackbarService.Add(successMessage, Severity.Success, o =>
             {
                 o.VisibleStateDuration = 5000;
             });
+        }
+        else
+        {
+            foreach (var message in result.Messages)
+            {
+                snackbarService.Add(message.Text, ConvertSeverity(message.Severity), o =>
+                {
+                    o.VisibleStateDuration = 5000;
+                });
+            }
         }
 
         return Task.CompletedTask;

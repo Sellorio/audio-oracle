@@ -49,28 +49,13 @@
 								<th>Alt. Title</th>
 								<th>Duration</th>
 								<th>Status</th>
-								<th>Requested</th>
+								<th></th>
 							</tr>
 						</thead>
 						<tbody>
 							@foreach (var track in albumResult!.Value.Tracks.OrderBy(x => x.TrackNumber))
 							{
-								<tr>
-									<td>@track.TrackNumber</td>
-									<td>@track.Title</td>
-									<td>@track.AlternateTitle</td>
-									<td>@(track.Duration == null ? null : $"{(int)track.Duration.Value.TotalMinutes}:{track.Duration.Value.Seconds}")</td>
-									<td>
-										@track.Status
-
-										@if (track.StatusText != null)
-										{
-											<br>
-											@track.StatusText
-										}
-									</td>
-									<td>@track.IsRequested</td>
-								</tr>
+								<TrackDetailsRow @key="track" Track="track" />
 							}
 						</tbody>
 					</AoGridList>

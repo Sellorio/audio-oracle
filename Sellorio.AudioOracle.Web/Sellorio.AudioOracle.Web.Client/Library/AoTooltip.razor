@@ -1,0 +1,14 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudTooltip Text="@Text" TooltipContent="TooltipContent" ChildContent="ChildContent" Disabled="DisableContent || Text == null && TooltipContent == null" />
+
+@code {
+	[Parameter]
+	public string? Text { get; set; }
+
+	[Parameter]
+	public RenderFragment? TooltipContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

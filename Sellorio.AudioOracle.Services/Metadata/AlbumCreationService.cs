@@ -94,7 +94,7 @@ internal class AlbumCreationService(
             var mappedAlbum = metadataMapper.Map(albumData);
             mappedAlbum.Artists = artistsResult.Value!;
 
-            return mappedAlbum; // TODO: Check if artists are fully populated
+            return mappedAlbum;
         });
 
         if (result.WasSuccess)

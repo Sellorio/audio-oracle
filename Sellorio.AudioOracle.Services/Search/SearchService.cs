@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Library.Results;
+using Sellorio.AudioOracle.Library.Results.Messages;
+using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Models.Search;
 using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
@@ -11,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Services.Search;
 
-internal class SearchService(DatabaseContext databaseContext, IProviderInvocationService providerInvocationService) : ISearchService
+internal class SearchService(DatabaseContext databaseContext, IProviderInvocationService providerInvocationService, IEnumerable<IDownloadProvider> downloadProviders) : ISearchService
 {
     public async Task<ValueResult<IList<SearchResult>>> SearchAsync(string searchText)
     {
@@ -53,5 +55,99 @@ internal class SearchService(DatabaseContext databaseContext, IProviderInvocatio
         }
 
         return ValueResult<IList<SearchResult>>.Success(results, providersSearchResult.Messages);
+    }
+
+    public async Task<ValueResult<IList<Models.Search.DownloadSearchResult>>> SearchForDownloadAsync(int trackId)
+    {
+        var track =
+            await databaseContext.Tracks
+                .AsNoTracking()
+                .Include(x => x.Album)
+                .Include(x => x.Artists)!.ThenInclude(x => x.Artist)
+                .SingleOrDefaultAsync(x => x.Id == trackId);
+
+        if (track == null)
+        {
+            return ResultMessage.NotFound("Track");
+        }
+
+        var criteria = new DownloadSearchCriteria
+        {
+            TrackTitle = track.Title!,
+            AlbumTitle = track.Album!.Title,
+            MainArtist = track.Artists!.FirstOrDefault()?.Artist!.Name
+        };
+
+        var providersSearchResult =
+            await providerInvocationService.InvokeAllAsync<IDownloadSearchProvider, PagedList<Providers.Models.DownloadSearchResult>>(
+                x => x.SearchForDownloadAsync(criteria, pageSize: 20));
+
+        if (!providersSearchResult.WasSuccess)
+        {
+            return ValueResult<IList<Models.Search.DownloadSearchResult>>.Failure(providersSearchResult.Messages);
+        }
+
+        var results = new List<Models.Search.DownloadSearchResult>(providersSearchResult.Value!.Sum(x => x.Items.Count));
+
+        foreach (var providerResults in providersSearchResult.Value!)
+        {
+            foreach (var providerResult in providerResults.Items)
+            {
+                results.Add(new()
+                {
+                    AlbumArtUrl = providerResult.AlbumArtUrl,
+                    AlbumTitle = providerResult.AlbumTitle,
+                    ArtistNames = providerResult.ArtistNames,
+                    DownloadSource = new()
+                    {
+                        Source = providerResult.Source,
+                        SourceId = providerResult.Ids.SourceId,
+                        SourceUrlId = providerResult.Ids.SourceUrlId
+                    },
+                    Title = providerResult.Title
+                });
+            }
+        }
+
+        return ValueResult<IList<Models.Search.DownloadSearchResult>>.Success(results, providersSearchResult.Messages);
+    }
+
+    public async Task<ValueResult<DownloadSource>> SearchForDownloadByUrlAsync(string url)
+    {
+        var isSupportedUrl = false;
+        Result? failedResult = null;
+
+        foreach (var downloadProvider in downloadProviders)
+        {
+            if (downloadProvider.IsSupportedDownloadUrl(url))
+            {
+                isSupportedUrl = true;
+
+                var downloadIdsResult = await downloadProvider.ResolveIdsFromTrackUrlAsync(url);
+
+                if (downloadIdsResult.WasSuccess)
+                {
+                    return new DownloadSource
+                    {
+                        Source = downloadProvider.ProviderName,
+                        SourceId = downloadIdsResult.Value.SourceId,
+                        SourceUrlId = downloadIdsResult.Value.SourceUrlId
+                    };
+                }
+                else
+                {
+                    failedResult = downloadIdsResult.AsResult();
+                }
+            }
+        }
+
+        if (!isSupportedUrl)
+        {
+            return ResultMessage.Error(
+                "The given url is not supported by any provider. " +
+                "URL formats may be strict - try removing any unnecessary url parameters for example.");
+        }
+
+        return ValueResult<DownloadSource>.Failure(failedResult!.Messages);
     }
 }

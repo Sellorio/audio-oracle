@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.ApiTools;
 using Sellorio.AudioOracle.Library.Results;
-using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.Providers.YouTube.Services;
 
@@ -18,7 +17,7 @@ internal class DownloadSearchProvider(IApiService apiService) : IDownloadSearchP
     {
         var searchResults =
             await SearchAsync(
-                searchCriteria.TrackTitle + " " + searchCriteria.MainArtist,
+                searchCriteria.TrackTitle + (searchCriteria.MainArtist == null ? "" : " " + searchCriteria.MainArtist),
                 Constants.SearchBySongsParams,
                 ConvertSongResult);
 

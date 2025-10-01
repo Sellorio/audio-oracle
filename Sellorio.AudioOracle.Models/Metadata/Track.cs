@@ -6,18 +6,26 @@ namespace Sellorio.AudioOracle.Models.Metadata;
 
 public class Track
 {
-    public required int Id { get; init; }
-    public required int AlbumId { get; init; }
-    public required int? AlbumArtOverrideId { get; init; }
-    public required FileInfo? AlbumArtOverride { get; init; }
+    public required int Id { get; set; }
+    public required int AlbumId { get; set; }
+    public required int? AlbumArtOverrideId { get; set; }
+    public required FileInfo? AlbumArtOverride { get; set; }
     public required bool IsRequested { get; set; } /* AutoMapper does not work for this property for some reason so it has to be settable */
-    public required TrackStatus Status { get; init; }
-    public required string StatusText { get; init; }
-    public required string Filename { get; init; }
+    public required TrackStatus Status { get; set; }
+    public required string StatusText { get; set; }
+    public required string Filename { get; set; }
 
-    public required string Title { get; init; }
-    public required string AlternateTitle { get; init; }
-    public required TimeSpan? Duration { get; init; }
-    public required int? TrackNumber { get; init; }
-    public required IList<Artist> Artists { get; init; }
+    public required string Title { get; set; }
+    public required string AlternateTitle { get; set; }
+    public required TimeSpan? Duration { get; set; }
+    public required int? TrackNumber { get; set; }
+    public required IList<Artist> Artists { get; set; }
+
+    public required string MetadataSource { get; set; }
+    public required string MetadataSourceUrlId { get; set; }
+    public required string MetadataSourceId { get; set; }
+
+    public string? DownloadSource { get; set; }
+    public string? DownloadSourceUrlId { get; set; }
+    public string? DownloadSourceId { get; set; }
 }

@@ -5,5 +5,5 @@ namespace Sellorio.AudioOracle.Web.Client.Library.Services;
 
 public interface IResultPopupService
 {
-    Task ShowResultAsPopupAsync(IResult result);
+    Task ShowResultAsPopupAsync(IResult result, string? successMessage);
 }

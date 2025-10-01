@@ -12,7 +12,7 @@
 			<AoTextField Label="Source" Value="@SearchResult.Source" Disabled />
 			<AoTextField Label="Source ID" Value="@SearchResult.AlbumId" Disabled />
 			<AoFormSeparator />
-			<AoEnumSwitch TEnum="TracksToRequest" @bind-SelectedOption="tracksToRequest" />
+			<AoEnumSwitchField TEnum="TracksToRequest" Label="Requested Tracks" @bind-SelectedOption="tracksToRequest" />
 			<AoResultMessages Result="addResult" />
 			<AoFormButtons>
 				<AoSubmit Label="Add" />

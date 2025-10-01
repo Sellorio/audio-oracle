@@ -1,0 +1,23 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudMenu Icon="" Disabled="DisableContent || Loading">
+	<ActivatorContent>
+		<MudButton StartIcon="@(Loading ? null : Icons.Material.Filled.Menu)" Variant="Variant.Filled" Color="Color.Primary">
+			@if (Loading)
+			{
+				<MudProgressCircular Size="Size.Small" Indeterminate />
+			}
+		</MudButton>
+	</ActivatorContent>
+	<ChildContent>
+		@ChildContent
+	</ChildContent>
+</MudMenu>
+
+@code {
+	[Parameter]
+	public bool Loading { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
+}

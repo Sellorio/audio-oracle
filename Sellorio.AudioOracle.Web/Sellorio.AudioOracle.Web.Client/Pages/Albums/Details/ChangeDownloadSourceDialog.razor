@@ -1,0 +1,164 @@
+﻿@using Sellorio.AudioOracle.Models.Metadata
+@using Sellorio.AudioOracle.Models.Search
+@using System.Web
+@using Sellorio.AudioOracle.ServiceInterfaces.Metadata
+@using Sellorio.AudioOracle.ServiceInterfaces.Search
+@inherits AoDialogBase<Track>
+@inject ISearchService SearchService
+@inject ITrackService TrackService
+
+<AoDialogLayout Title="Change Download Source">
+	<AoBoxLoader Loading="isSaving">
+		<AoForm OnValidSubmit="ChangeUsingUrlAsync">
+			<AoHeading4>Current</AoHeading4>
+			<AoTextField Label="Source" Value="@Track.DownloadSource" Disabled />
+			<AoTextField Label="ID" Value="@Track.DownloadSourceId" Disabled />
+			<AoFormSeparator />
+
+			@if (isSearching)
+			{
+				<AoLoader />
+			}
+			else if (searchResult != null)
+			{
+				<AoColumns>
+					<AoColumn Weight="1">
+						<AoHeading4>Search Results</AoHeading4>
+					</AoColumn>
+					<AoColumn>
+						<AoButton Label="Back" Secondary OnClick="() => searchResult = null" />
+					</AoColumn>
+				</AoColumns>
+
+				@if (Track.Status == TrackStatus.Imported)
+				{
+					<AoCheckboxField Label="Re-download" @bind-Value="redownload" />
+				}
+
+				<AoResultMessages Result="searchResult" />
+
+				@if (searchResult.WasSuccess)
+				{
+					<AoResultMessages Result="changeBySearchResult" />
+
+					<AoGridList ClickableRows>
+						<thead>
+							<tr>
+								<td>Art</td>
+								<td>Title</td>
+								<td>Album</td>
+								<td>Artist(s)</td>
+							</tr>
+						</thead>
+						<tbody>
+							@foreach (var i in searchResult.Value)
+							{
+								var item = i;
+
+								<tr @onclick="() => ChangeUsingSearchResultAsync(item)">
+									<td>
+										@if (item.AlbumArtUrl != null)
+										{
+											<img src="@($"/pf?url={HttpUtility.UrlEncode(item.AlbumArtUrl)}")">
+										}
+										else
+										{
+											<AoImagePlaceholder />
+										}
+									</td>
+									<td>@item.Title</td>
+									<td>@item.AlbumTitle</td>
+									<td>
+										@if (item.ArtistNames != null)
+										{
+											@string.Join(", ", item.ArtistNames)
+										}
+									</td>
+								</tr>
+							}
+						</tbody>
+					</AoGridList>
+				}
+			}
+			else
+			{
+				<AoHeading4>Search</AoHeading4>
+				<AoFormButtons>
+					<AoButton Label="Find" Primary OnClick="SearchAsync" />
+				</AoFormButtons>
+				<AoFormSeparator />
+
+				<AoHeading4>Enter URL</AoHeading4>
+				<AoTextField Label="URL" @bind-Value="sourceUrl" MaxLength="300" Required />
+
+				@if (Track.Status == TrackStatus.Imported)
+				{
+					<AoCheckboxField Label="Re-download" @bind-Value="redownload" />
+				}
+
+				<AoResultMessages Result="changeByUrlResult" />
+
+				<AoFormButtons>
+					<AoSubmit Label="Update" />
+				</AoFormButtons>
+			}
+		</AoForm>
+	</AoBoxLoader>
+</AoDialogLayout>
+
+@code {
+	bool isSearching;
+	bool isSaving;
+	string? sourceUrl;
+	bool redownload = true;
+	ValueResult<IList<DownloadSearchResult>>? searchResult;
+	IResult? changeByUrlResult;
+	IResult? changeBySearchResult;
+
+	[Parameter]
+	public required Track Track { get; set; }
+
+	async Task ChangeUsingUrlAsync()
+	{
+		isSaving = true;
+
+		var result = await SearchService.SearchForDownloadByUrlAsync(sourceUrl!);
+		changeByUrlResult = result;
+
+		if (result.WasSuccess)
+		{
+			var result2 = await TrackService.ChangeDownloadSourceAsync(Track.AlbumId, Track.Id, result.Value, redownload);
+			changeByUrlResult = result2;
+
+			if (result2.WasSuccess)
+			{
+				CloseDialog(result2.Value);
+			}
+		}
+
+		isSaving = false;
+	}
+
+	async Task SearchAsync()
+	{
+		isSearching = true;
+		searchResult = null;
+		searchResult = await SearchService.SearchForDownloadAsync(Track.Id);
+		isSearching = false;
+	}
+
+	async Task ChangeUsingSearchResultAsync(DownloadSearchResult item)
+	{
+		isSaving = true;
+
+		var result = await TrackService.ChangeDownloadSourceAsync(Track.AlbumId, Track.Id, item.DownloadSource, redownload);
+		changeBySearchResult = result;
+
+		if (result.WasSuccess)
+		{
+			CloseDialog(result.Value);
+		}
+
+		isSaving = false;
+	}
+}
