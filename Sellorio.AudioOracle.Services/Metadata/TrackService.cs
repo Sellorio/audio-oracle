@@ -184,6 +184,7 @@ internal class TrackService(
         switch (data.Status)
         {
             case TrackStatus.Imported:
+            case TrackStatus.NotRequested:
                 if (redownloadTrack)
                 {
                     if (File.Exists(data.Filename))
