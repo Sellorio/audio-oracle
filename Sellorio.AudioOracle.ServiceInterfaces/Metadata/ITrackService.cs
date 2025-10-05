@@ -10,4 +10,5 @@ public interface ITrackService
     Task<ValueResult<Track>> RequestTrackAsync(int albumId, int trackId);
     Task<ValueResult<Track>> UnrequestTrackAsync(int albumId, int trackId, bool deleteFile);
     Task<ValueResult<Track>> ChangeDownloadSourceAsync(int albumId, int trackId, DownloadSource downloadSource, bool redownloadTrack);
+    Task<ValueResult<Track>> DeleteTrackMediaAsync(int albumId, int trackId);
 }

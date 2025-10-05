@@ -27,4 +27,9 @@ internal class TrackService(IRestClient restClient) : ITrackService
     {
         return restClient.Post($"/albums/{albumId}/tracks/{trackId}/unrequest{new { deleteFile }}").ToValueResult<Track>();
     }
+
+    public Task<ValueResult<Track>> DeleteTrackMediaAsync(int albumId, int trackId)
+    {
+        return restClient.Delete($"/albums/{albumId}/tracks/{trackId}/media").ToValueResult<Track>();
+    }
 }

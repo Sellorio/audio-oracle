@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Mime;
@@ -9,6 +10,7 @@ using Sellorio.AudioOracle.Data.Content;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
 using Sellorio.AudioOracle.Models.Content;
+using FileInfo = Sellorio.AudioOracle.Models.Content.FileInfo;
 
 namespace Sellorio.AudioOracle.Services.Content;
 
@@ -76,6 +78,27 @@ internal class FileService(IHttpClientFactory httpClientFactory, DatabaseContext
         var model = contentMapper.Map(data);
 
         return model;
+    }
+
+    public async Task<ValueResult<StreamWithFilename>> GetTrackMediaStreamAsync(int trackId)
+    {
+        var data = await databaseContext.Tracks.AsNoTracking().SingleOrDefaultAsync(x => x.Id == trackId);
+
+        if (data == null)
+        {
+            return ResultMessage.NotFound("Track");
+        }
+
+        if (data.Filename == null || !File.Exists(data.Filename))
+        {
+            return ResultMessage.NotFound("Track File");
+        }
+
+        return new StreamWithFilename
+        {
+            Stream = File.OpenRead(data.Filename),
+            FileName = Path.GetFileName(data.Filename)
+        };
     }
 
     public async Task<Result> DeleteAsync(int fileInfoId)

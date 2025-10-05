@@ -9,4 +9,5 @@ public interface IFileService
     Task<ValueResult<FileInfo>> CreateFileFromUrlAsync(string url, params FileType[] acceptedTypes);
     Task<Result> DeleteAsync(int fileInfoId);
     Task<ValueResult<FileInfo>> GetByUrlIdAsync(string urlId);
+    Task<ValueResult<StreamWithFilename>> GetTrackMediaStreamAsync(int trackId);
 }

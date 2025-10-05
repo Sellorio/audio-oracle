@@ -224,4 +224,37 @@ internal class TrackService(
 
         return metadataMapper.Map(data);
     }
+
+    public async Task<ValueResult<Track>> DeleteTrackMediaAsync(int albumId, int trackId)
+    {
+        var data = await databaseContext.Tracks.FindAsync(trackId);
+
+        if (data == null || data.AlbumId != albumId)
+        {
+            return ResultMessage.NotFound("Track");
+        }
+
+        if (data.Filename == null)
+        {
+            return ResultMessage.Information("The track has no media.");
+        }
+
+        if (data.Status is TrackStatus.Downloading or TrackStatus.MissingMetadata)
+        {
+            return ResultMessage.Error("Cannot delete track media while it is being processed.");
+        }
+
+        data.Filename = null;
+        data.Status = TrackStatus.NotRequested;
+        data.IsRequested = false;
+
+        await databaseContext.SaveChangesAsync();
+
+        if (File.Exists(data.Filename))
+        {
+            File.Delete(data.Filename);
+        }
+
+        return metadataMapper.Map(data);
+    }
 }

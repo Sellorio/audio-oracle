@@ -33,4 +33,10 @@ public class TrackController(ITrackService trackService) : ControllerBase
     {
         return await trackService.ChangeDownloadSourceAsync(albumId, id, downloadSource, redownloadTrack).ToActionResult();
     }
+
+    [HttpDelete("{id:int}/media")]
+    public async Task<IActionResult> PutDownloadSourceAsync(int albumId, int id)
+    {
+        return await trackService.DeleteTrackMediaAsync(albumId, id).ToActionResult();
+    }
 }

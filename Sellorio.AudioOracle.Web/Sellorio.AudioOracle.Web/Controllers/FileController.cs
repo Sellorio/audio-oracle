@@ -48,4 +48,17 @@ public class FileController(IFileService fileService, IHttpClientFactory httpCli
                 await response.Content.ReadAsStreamAsync(),
                 response.Content.Headers.ContentType.MediaType);
     }
+
+    [HttpGet("mf/{trackId:int}")] // mf = Media File - the media file for a track by track id
+    public async Task<IActionResult> GetMediaFileAsync(int trackId)
+    {
+        var result = await fileService.GetTrackMediaStreamAsync(trackId);
+
+        if (!result.WasSuccess)
+        {
+            return NotFound();
+        }
+
+        return File(result.Value.Stream, "audio/mpeg", result.Value.FileName);
+    }
 }

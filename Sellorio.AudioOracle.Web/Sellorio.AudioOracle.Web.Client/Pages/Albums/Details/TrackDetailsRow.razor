@@ -47,6 +47,19 @@
 
 			<AoAction Title="Change Download Source" OnClick="ChangeDownloadSourceAsync" Disabled="changeDownloadSourceDisabled"
 				      Tooltip="@(changeDownloadSourceDisabled ? "Cannot change download source while track is processing." : null)" />
+
+			@if (Track.Filename != null)
+			{
+				var deleteMediaDisabled = Track.Status is TrackStatus.MissingMetadata or TrackStatus.Downloading;
+
+				<AoActionSeparator />
+				<AoAction Title="Download" Href="@("/mf/" + Track.Id)" />
+				<AoAction Title="Delete" OnClick="DeleteTrackMediaAsync" Disabled="deleteMediaDisabled"
+						  Tooltip="@(deleteMediaDisabled ? "Cannot change download source while track is processing." : "Deletes the downloaded media and unrequests the track.")" />
+
+			}
+
+			
 		</AoActionsDropdown>
 	</td>
 </tr>
@@ -106,6 +119,23 @@
 			Track.DownloadSource = result.Value.DownloadSource;
 			Track.DownloadSourceId = result.Value.DownloadSourceId;
 			Track.DownloadSourceUrlId = result.Value.DownloadSourceUrlId;
+			Track.Filename = result.Value.Filename;
+		}
+	}
+
+	async Task DeleteTrackMediaAsync()
+	{
+		isRunningAction = true;
+		var result = await TrackService.DeleteTrackMediaAsync(Track.AlbumId, Track.Id);
+		isRunningAction = false;
+
+		await ResultPopupService.ShowResultAsPopupAsync(result, "Track media deleted successfully.");
+
+		if (result.WasSuccess)
+		{
+			Track.Status = result.Value.Status;
+			Track.StatusText = result.Value.StatusText;
+			Track.IsRequested = result.Value.IsRequested;
 			Track.Filename = result.Value.Filename;
 		}
 	}
