@@ -1,5 +1,7 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Sellorio.AudioOracle.Services.Content;
@@ -59,6 +61,10 @@ public class FileController(IFileService fileService, IHttpClientFactory httpCli
             return NotFound();
         }
 
-        return File(result.Value.Stream, "audio/mpeg", result.Value.FileName);
+        var utf8FileName = Uri.EscapeDataString(result.Value.FileName);
+
+        Response.Headers.ContentDisposition = $"inline; filename=\"{result.Value.FileName}\"; filename*=UTF-8''{utf8FileName}";
+
+        return File(result.Value.Stream, "audio/mpeg");
     }
 }
