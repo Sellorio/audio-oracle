@@ -14,11 +14,39 @@
 		<AoTiles>
 			@foreach (var album in albumsResult.Value)
 			{
-				<AoVerticalTile
-					Title="@album.Title"
-					ImageSrc="@($"/f/{album.AlbumArt.UrlId}")"
-					Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
-					Href="@($"/albums/{album.Id}")" />
+				var trackStatusSummary = GetTrackStatusSummary(album);
+
+				<AoVerticalTile Title="@album.Title"
+								ImageSrc="@($"/f/{album.AlbumArt.UrlId}")"
+								Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
+								Href="@($"/albums/{album.Id}")">
+					<StatusStripContent>
+						@if (trackStatusSummary.Imported > 0)
+						{
+							<AoStatusStripSegment Size="trackStatusSummary.Imported" Success Tooltip="Successfully imported tracks." />
+						}
+
+						@if (trackStatusSummary.InProgress > 0)
+						{
+							<AoStatusStripSegment Size="trackStatusSummary.InProgress" Information Tooltip="Downloading or fetching metadata." />
+						}
+
+						@if (trackStatusSummary.Failed > 0)
+						{
+							<AoStatusStripSegment Size="trackStatusSummary.Failed" Error Tooltip="Failed to download or retrieve metadata." />
+						}
+
+						@if (trackStatusSummary.MissingSource > 0)
+						{
+							<AoStatusStripSegment Size="trackStatusSummary.MissingSource" Warning Tooltip="Requested tracks missing a download source." />
+						}
+
+						@if (trackStatusSummary.NotRequested > 0)
+						{
+							<AoStatusStripSegment Size="trackStatusSummary.NotRequested" Default Tooltip="Tracks not requested." />
+						}
+					</StatusStripContent>
+				</AoVerticalTile>
 			}
 		</AoTiles>
 	}
@@ -29,11 +57,46 @@
 
 	protected override async Task OnInitializedAsync()
 	{
-		albumsResult = await AlbumService.GetAlbumsAsync(AlbumFields.Artists);
+		albumsResult = await AlbumService.GetAlbumsAsync(AlbumFields.Tracks | AlbumFields.Artists);
 	}
 
 	Task AlbumClickedAsync()
 	{
 		return Task.CompletedTask;
+	}
+
+	(byte Failed, byte MissingSource, byte InProgress, byte NotRequested, byte Imported) GetTrackStatusSummary(Album album)
+	{
+		byte failed = 0,
+			 missingSource = 0,
+			 inProgress = 0,
+			 notRequested = 0,
+			 imported = 0;
+
+		foreach (var track in album.Tracks)
+		{
+			switch (track.Status)
+			{
+				case TrackStatus.MissingMetadata or TrackStatus.Downloading:
+					inProgress++;
+					break;
+				case TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed:
+					failed++;
+					break;
+				case TrackStatus.MissingDownloadSource:
+					missingSource++;
+					break;
+				case TrackStatus.Imported:
+					imported++;
+					break;
+				case TrackStatus.NotRequested:
+					notRequested++;
+					break;
+				default:
+					throw new NotSupportedException("Unexpected track status: " + track.Status);
+			}
+		}
+
+		return (failed, missingSource, inProgress, notRequested, imported);
 	}
 }

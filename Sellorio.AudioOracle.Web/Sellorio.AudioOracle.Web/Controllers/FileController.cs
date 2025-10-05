@@ -13,7 +13,7 @@ public class FileController(IFileService fileService, IHttpClientFactory httpCli
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient(nameof(FileController));
 
-    [HttpGet("f/{urlId}")]
+    [HttpGet("f/{urlId}")] // f = File. Any file that is stored in the database
     public async Task<IActionResult> GetFileContentAsync(string urlId)
     {
         var fileResult = await fileService.GetByUrlIdAsync(urlId);

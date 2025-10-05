@@ -18,3 +18,7 @@
 .ao-vertical-tile.clickable {
     cursor: pointer;
 }
+
+.ao-vertical-tile ::deep .mud-paper {
+    overflow: hidden;
+}

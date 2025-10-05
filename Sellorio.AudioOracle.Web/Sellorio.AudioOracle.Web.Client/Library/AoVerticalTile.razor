@@ -26,6 +26,13 @@
 					@ActionsContent
 				</div>
 			}
+
+			@if (StatusStripContent != null)
+			{
+				<AoStatusStrip>
+					@StatusStripContent
+				</AoStatusStrip>
+			}
 		</MudPaper>
 	</ClickableElement>
 </div>
@@ -45,6 +52,9 @@
 
 	[Parameter]
 	public RenderFragment? ActionsContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? StatusStripContent { get; set; }
 
 	[Parameter]
 	public EventCallback OnClick { get; set; }
