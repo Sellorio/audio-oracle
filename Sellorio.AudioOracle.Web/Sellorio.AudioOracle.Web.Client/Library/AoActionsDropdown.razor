@@ -1,6 +1,7 @@
-﻿@inherits Base.AoDisableComponent
+﻿@using Sellorio.AudioOracle.Web.Client.Library.Providers
+@inherits Base.AoDisableComponent
 
-<MudMenu Icon="" Disabled="DisableContent || Loading">
+<MudMenu Dense Disabled="DisableContent || Loading">
 	<ActivatorContent>
 		<MudButton StartIcon="@(Loading ? null : Icons.Material.Filled.Menu)" Variant="Variant.Filled" Color="Color.Primary">
 			@if (Loading)
@@ -10,7 +11,9 @@
 		</MudButton>
 	</ActivatorContent>
 	<ChildContent>
-		@ChildContent
+		<AoDisableStateProvider>
+			@ChildContent
+		</AoDisableStateProvider>
 	</ChildContent>
 </MudMenu>
 

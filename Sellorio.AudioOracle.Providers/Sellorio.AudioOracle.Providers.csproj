@@ -17,7 +17,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Caching.Memory" Version="9.0.8" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.8" />
-    <PackageReference Include="SoundCloudExplode" Version="1.6.6" />
   </ItemGroup>
 
   <ItemGroup>

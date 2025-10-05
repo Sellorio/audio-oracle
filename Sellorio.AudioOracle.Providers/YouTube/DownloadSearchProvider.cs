@@ -71,7 +71,7 @@ internal class DownloadSearchProvider(IApiService apiService) : IDownloadSearchP
             titleSection.Get<string>("text")
                 ?? throw new InvalidOperationException("Unable to parse search results.");
 
-        var videoId = titleSection["navigtionEndpoint"]!["watchEndpoint"]!.Get<string>("videoId")!;
+        var videoId = titleSection["navigationEndpoint"]!["watchEndpoint"]!.Get<string>("videoId")!;
 
         var albumArtistSection =
             infoRoot[1]?["musicResponsiveListItemFlexColumnRenderer"]?["text"]?["runs"]

@@ -18,19 +18,19 @@ internal class FileTagsService(ILogger<FileTagsService> logger, DatabaseContext 
         try
         {
             var albumArtBytes =
-            await databaseContext.FileInfos
-                .AsNoTracking()
-                .Where(x => x.Id == album.AlbumArt.Id)
-                .Select(x => x.Content!.Data)
-                .SingleAsync();
+                await databaseContext.FileInfos
+                    .AsNoTracking()
+                    .Where(x => x.Id == album.AlbumArt.Id)
+                    .Select(x => x.Content!.Data)
+                    .SingleAsync();
 
             using var mp3 = File.Create(filename);
             var tag = mp3.GetTag(TagTypes.Id3v2, true);
 
             tag.Title = track.Title + (track.AlternateTitle == null ? string.Empty : $" - {track.AlternateTitle}");
             tag.Album = album.Title;
-            tag.AlbumArtists = album.Artists.Select(x => x.Name).ToArray();
-            tag.Performers = track.Artists.Select(x => x.Name).ToArray();
+            tag.AlbumArtists = [string.Join("; ", album.Artists.Select(x => x.Name))];
+            tag.Performers = [string.Join("; ", track.Artists.Select(x => x.Name))];
             tag.Year = album.ReleaseYear ?? default;
             tag.Track = (uint)track.TrackNumber!;
             tag.TrackCount = album.TrackCount;

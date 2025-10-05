@@ -103,7 +103,12 @@ internal class MetadataSearchProvider(HttpClient httpClient, ICoverArtArchiveSer
 
     private async Task<MetadataSearchResult?> RecordingToSearchResultAsync(RecordingDto recording)
     {
-        var releases = recording.Releases!.Where(ReleaseMinimumRequirements).OrderBy(GetReleasePreferenceOrder).ToArray();
+        if (recording.Releases == null)
+        {
+            return null;
+        }
+
+        var releases = recording.Releases.Where(ReleaseMinimumRequirements).OrderBy(GetReleasePreferenceOrder).ToArray();
 
         if (releases.Length == 0)
         {

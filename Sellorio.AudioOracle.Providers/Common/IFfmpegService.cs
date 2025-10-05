@@ -6,5 +6,6 @@ namespace Sellorio.AudioOracle.Providers.Common;
 public interface IFfmpegService
 {
     Task<Result> ConvertToMp3Async(string source, string destination, int outputBitrateKbps, bool loudnessNormalization);
+    Task<Result> DownloadMediaStreamAsync(string sourceUrl, string destination, int outputBitrateKbps, bool loudnessNormalization, bool reEncodeToMp3);
     Task EnsureFfmpegExecutableAsync();
 }

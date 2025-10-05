@@ -95,6 +95,8 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
         {
             case null:
                 return string.Empty;
+            case bool:
+                return value.ToString()!.ToLower();
             case byte or sbyte or short or ushort or int or uint or long or ulong or float or double or decimal:
                 return value.ToString();
             case string stringValue:

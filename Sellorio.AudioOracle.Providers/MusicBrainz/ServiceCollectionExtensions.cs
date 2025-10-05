@@ -12,6 +12,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddMusicBrainzProvider(this IServiceCollection services)
     {
         services.AddCommonProviderServices();
+        services.AddTransient<ITrackMetadataProvider, TrackMetadataProvider>();
 
         services
             .AddHttpClient(Constants.ProviderName + "MB", o =>
@@ -22,7 +23,6 @@ public static class ServiceCollectionExtensions
             .AddTypedClient<IMetadataSearchProvider, MetadataSearchProvider>()
             .AddTypedClient<IAlbumMetadataProvider, AlbumMetadataProvider>()
             .AddTypedClient<IMusicBrainzAlbumMetadataProvider, AlbumMetadataProvider>()
-            .AddTypedClient<ITrackMetadataProvider, TrackMetadataProvider>()
             .AddTypedClient<IArtistMetadataProvider, ArtistMetadataProvider>();
 
         services

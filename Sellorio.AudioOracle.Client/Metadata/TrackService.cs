@@ -25,6 +25,6 @@ internal class TrackService(IRestClient restClient) : ITrackService
 
     public Task<ValueResult<Track>> UnrequestTrackAsync(int albumId, int trackId, bool deleteFile)
     {
-        return restClient.Post($"/albums/{albumId}/tracks/{trackId}/unrequest").ToValueResult<Track>();
+        return restClient.Post($"/albums/{albumId}/tracks/{trackId}/unrequest{new { deleteFile }}").ToValueResult<Track>();
     }
 }

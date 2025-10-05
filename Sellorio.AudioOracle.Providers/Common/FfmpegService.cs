@@ -1,8 +1,6 @@
 ﻿using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
-using System.Net.Http;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.Results;
@@ -32,6 +30,44 @@ internal class FfmpegService : IFfmpegService
         var bitrate = $"-ab {outputBitrateKbps}k";
 
         var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{source}\" {filters} {tagsFormat} {bitrate} \"{destination}\"")
+        {
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true
+        };
+
+        var process = Process.Start(startInfo);
+
+        // make sure the output buffer doesn't fill and block the process
+        var errorOutputTask = process!.StandardError.ReadToEndAsync();
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0)
+        {
+            return ResultMessage.Error(await errorOutputTask);
+        }
+
+        return Result.Success();
+    }
+
+    public async Task<Result> DownloadMediaStreamAsync(string sourceUrl, string destination, int outputBitrateKbps, bool loudnessNormalization, bool reEncodeToMp3)
+    {
+        await EnsureFfmpegExecutableAsync();
+
+        var destinationDirectory = Path.GetDirectoryName(destination)!;
+
+        if (!Directory.Exists(destinationDirectory))
+        {
+            Directory.CreateDirectory(destinationDirectory);
+        }
+
+        var filters = loudnessNormalization ? "-af \"loudnorm=I=-12:TP=0:LRA=11\"" : "";
+        var tagsFormat = "-id3v2_version 3 -write_id3v1 1";
+        var bitrate = $"-ab {outputBitrateKbps}k";
+        var encodeAsMp3 = reEncodeToMp3 ? $"-c:a libmp3lame" : "-c copy";
+
+        var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{sourceUrl}\" {encodeAsMp3} {filters} {tagsFormat} {bitrate} \"{destination}\"")
         {
             RedirectStandardError = true,
             UseShellExecute = false,

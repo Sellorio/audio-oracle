@@ -1,26 +1,20 @@
 ﻿using System.Linq;
 using System.Threading.Tasks;
-using Sellorio.AudioOracle.Library;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Providers.Models;
-using SoundCloudExplode;
-using SoundCloudExplode.Search;
+using Sellorio.AudioOracle.Providers.SoundCloud.Models;
+using Sellorio.AudioOracle.Providers.SoundCloud.Services;
 
 namespace Sellorio.AudioOracle.Providers.SoundCloud;
 
-internal class DownloadSearchProvider(SoundCloudClient soundCloudClient) : IDownloadSearchProvider
+internal class DownloadSearchProvider(ISoundCloudApiService soundCloudApiService) : IDownloadSearchProvider
 {
     public string ProviderName => Constants.ProviderName;
 
     public async Task<ValueResult<PagedList<DownloadSearchResult>>> SearchForDownloadAsync(DownloadSearchCriteria searchCriteria, int pageSize)
     {
-        var rawResults =
-            await soundCloudClient.Search
-                .GetTracksAsync(searchCriteria.TrackTitle + (searchCriteria.MainArtist == null ? "" : " " + searchCriteria.MainArtist))
-                .Take(pageSize)
-                .ToArrayAsync();
-
-        var searchResults = rawResults.Select(Convert).ToArray();
+        var searchResult = await soundCloudApiService.SearchTracksAsync(searchCriteria.TrackTitle);
+        var searchResults = searchResult.Collection.Select(Convert).ToArray();
 
         return new PagedList<DownloadSearchResult>
         {
@@ -30,17 +24,17 @@ internal class DownloadSearchProvider(SoundCloudClient soundCloudClient) : IDown
         };
     }
 
-    private static DownloadSearchResult Convert(TrackSearchResult trackSearchResult)
+    private static DownloadSearchResult Convert(TrackDto trackSearchResult)
     {
-        var album = trackSearchResult.PlaylistName ?? trackSearchResult.User?.Username ?? "No Album";
+        var album = trackSearchResult.PublisherMetadata?.AlbumTitle ?? trackSearchResult.Genre ?? "No Album";
         var artist = trackSearchResult.PublisherMetadata?.Artist ?? trackSearchResult.User?.FullName;
 
         return new DownloadSearchResult
         {
-            AlbumArtUrl = trackSearchResult.ArtworkUrl?.AbsoluteUri,
+            AlbumArtUrl = trackSearchResult.ArtworkUrl,
             AlbumTitle = album,
             ArtistNames = artist == null ? [] : [artist],
-            Ids = new() {  SourceId = trackSearchResult.Id.ToString(), SourceUrlId = Constants.SoundCloudUrlRegex().Match(trackSearchResult.Url!).Groups[1].Value },
+            Ids = new() {  SourceId = trackSearchResult.Id.ToString(), SourceUrlId = Constants.SoundCloudUrlRegex().Match(trackSearchResult.PermalinkUrl!).Groups[1].Value },
             Source = Constants.ProviderName,
             Title = trackSearchResult.Title!
         };

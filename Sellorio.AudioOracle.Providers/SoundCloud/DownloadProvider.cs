@@ -1,38 +1,35 @@
 ﻿using System;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
-using Sellorio.AudioOracle.Providers.Common;
 using Sellorio.AudioOracle.Providers.Models;
-using SoundCloudExplode;
+using Sellorio.AudioOracle.Providers.SoundCloud.Services;
 
 namespace Sellorio.AudioOracle.Providers.SoundCloud;
 
-internal partial class DownloadProvider(SoundCloudClient soundCloudClient, IFfmpegService ffmpegService) : IDownloadProvider
+internal partial class DownloadProvider(ISoundCloudApiService soundCloudApiService) : IDownloadProvider
 {
     public string ProviderName => Constants.ProviderName;
 
     public async Task<Result> DownloadTrackAsync(ResolvedIds trackIds, string outputFilename)
     {
         var track =
-            await soundCloudClient.Tracks.GetByIdAsync(long.Parse(trackIds.SourceId))
+            await soundCloudApiService.GetTrackAsync(long.Parse(trackIds.SourceId))
                 ?? throw new InvalidOperationException("This wouldn't have happened if you resolved ids first!");
-        var tempFilename = Path.Combine(Path.GetTempPath(), $"SC-{track.Id}.mp3");
-
-        await soundCloudClient.DownloadAsync(track, tempFilename);
 
         try
         {
-            await ffmpegService.ConvertToMp3Async(tempFilename, outputFilename, outputBitrateKbps: 256, loudnessNormalization: true);
+            await soundCloudApiService.DownloadTrackAsync(track, outputFilename);
         }
-        finally
+        catch
         {
-            if (File.Exists(tempFilename))
+            if (File.Exists(outputFilename))
             {
-                File.Delete(tempFilename);
+                File.Delete(outputFilename);
             }
+
+            throw;
         }
 
         return Result.Success();
@@ -45,7 +42,7 @@ internal partial class DownloadProvider(SoundCloudClient soundCloudClient, IFfmp
 
     public async Task<ValueResult<ResolvedIds>> ResolveIdsFromTrackUrlAsync(string downloadUrl)
     {
-        var track = await soundCloudClient.Tracks.GetAsync(downloadUrl);
+        var track = await soundCloudApiService.GetTrackAsync(downloadUrl);
 
         if (track == null)
         {

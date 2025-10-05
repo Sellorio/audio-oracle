@@ -132,6 +132,20 @@ internal class TrackService(
             case TrackStatus.NotRequested:
                 data.IsRequested = true;
 
+                if (!string.IsNullOrEmpty(data.Filename))
+                {
+                    if (File.Exists(data.Filename))
+                    {
+                        data.Status = TrackStatus.Imported;
+                        data.StatusText = null;
+                        break;
+                    }
+                    else
+                    {
+                        data.Filename = null;
+                    }
+                }
+
                 if (data.DownloadSource == null)
                 {
                     data.Status = TrackStatus.MissingDownloadSource;
