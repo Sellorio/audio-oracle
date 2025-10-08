@@ -41,9 +41,11 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
     private async Task<MetadataSearchResult[]> SearchAsync(string searchText, string @params, Func<JsonNavigator, Task<MetadataSearchResult>> searchResultConverter)
     {
         var searchResponse = await apiService.PostWithContextAsync("/search?prettyPrint=false", new { @params, query = searchText });
+        var searchResultsSectionJson = searchResponse["contents"]?["tabbedSearchResultsRenderer"]?["tabs"]?[0]?["tabRenderer"]?["content"]?["sectionListRenderer"]?["contents"];
         var searchResultsJson =
-            searchResponse["contents"]?["tabbedSearchResultsRenderer"]?["tabs"]?[0]?["tabRenderer"]?["content"]?["sectionListRenderer"]?["contents"]?[0]?["musicShelfRenderer"]?["contents"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+            searchResultsSectionJson![0]!["itemSectionRenderer"] == null
+                ? searchResultsSectionJson![0]!["musicShelfRenderer"]!["contents"]!
+                : searchResultsSectionJson![1]!["musicShelfRenderer"]!["contents"]!; // skip the "Did you mean..." section if it is there
 
         var results = new MetadataSearchResult[searchResultsJson.ArrayLength];
 

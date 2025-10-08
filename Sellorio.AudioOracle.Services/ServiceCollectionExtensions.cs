@@ -11,6 +11,7 @@ using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.Import;
 using Sellorio.AudioOracle.Services.Metadata;
 using Sellorio.AudioOracle.Services.Search;
 using Sellorio.AudioOracle.Services.Sessions;
@@ -40,6 +41,9 @@ public static class ServiceCollectionExtensions
             .AddScoped<IContentMapper, ContentMapper>()
             .AddScoped<IFileService, FileService>()
             .AddScoped<IFileTagsService, FileTagsService>()
+
+            // Import
+            .AddScoped<IImportService, ImportService>()
 
             // Metadata
             .AddScoped<IMetadataMapper, MetadataMapper>()

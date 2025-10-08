@@ -11,6 +11,7 @@ using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.Import;
 using Sellorio.AudioOracle.Services.Metadata;
 
 namespace Sellorio.AudioOracle.Services.TaskQueue.Handlers;
@@ -20,7 +21,8 @@ internal class DownloadTrack(
     ILogger<DownloadTrack> logger,
     IProviderInvocationService providerInvocationService,
     IFileTagsService fileTagsService,
-    IMetadataMapper metadataMapper) : ITaskHandler
+    IMetadataMapper metadataMapper,
+    IImportService importService) : ITaskHandler
 {
     public async Task HandleAsync(TaskHandlerContext context)
     {
@@ -48,43 +50,57 @@ internal class DownloadTrack(
 
         var trackFileName = $"{trackData.TrackNumber} - {EscapePathItem(trackData.Title!)}.mp3";
         var downloadFilename = Path.Combine(Path.GetTempPath(), trackFileName);
-        var filename = Path.Combine("/music", trackData.Album!.FolderName, trackFileName);
         var resolvedIds = new ResolvedIds { SourceId = trackData.DownloadSourceId!, SourceUrlId = trackData.DownloadSourceUrlId! };
 
-        Result downloadResult;
+        if (!await importService.TryImportAsync(trackData.DownloadSourceId!, downloadFilename))
+        {
+            Result downloadResult;
 
-        try
-        {
-            downloadResult =
-                await providerInvocationService.InvokeAsync<IDownloadProvider>(
-                    trackData.DownloadSource!,
-                    x => x.DownloadTrackAsync(resolvedIds, downloadFilename));
-        }
-        catch (Exception ex)
-        {
-            if (File.Exists(filename))
+            try
             {
-                try
+                downloadResult =
+                    await providerInvocationService.InvokeAsync<IDownloadProvider>(
+                        trackData.DownloadSource!,
+                        x => x.DownloadTrackAsync(resolvedIds, downloadFilename));
+            }
+            catch (Exception ex)
+            {
+                if (File.Exists(downloadFilename))
                 {
-                    File.Delete(filename);
+                    try
+                    {
+                        File.Delete(downloadFilename);
+                    }
+                    catch
+                    {
+                    }
                 }
-                catch
-                {
-                }
+
+                trackData.Status = TrackStatus.DownloadFailed;
+                trackData.StatusText = ex.Message;
+                await databaseContext.SaveChangesAsync();
+                return;
             }
 
-            trackData.Status = TrackStatus.DownloadFailed;
-            trackData.StatusText = ex.Message;
-            await databaseContext.SaveChangesAsync();
-            return;
-        }
+            if (!downloadResult.WasSuccess)
+            {
+                trackData.Status = TrackStatus.DownloadFailed;
+                trackData.StatusText = string.Join(" ", downloadResult.Messages.Select(x => x.Text));
+                await databaseContext.SaveChangesAsync();
 
-        if (!downloadResult.WasSuccess)
-        {
-            trackData.Status = TrackStatus.DownloadFailed;
-            trackData.StatusText = string.Join(" ", downloadResult.Messages.Select(x => x.Text));
-            await databaseContext.SaveChangesAsync();
-            return;
+                if (File.Exists(downloadFilename))
+                {
+                    try
+                    {
+                        File.Delete(downloadFilename);
+                    }
+                    catch
+                    {
+                    }
+                }
+
+                return;
+            }
         }
 
         var tagsResult = await fileTagsService.UpdateFileTagsAsync(downloadFilename, album, track);
@@ -94,9 +110,22 @@ internal class DownloadTrack(
             trackData.Status = TrackStatus.DownloadFailed;
             trackData.StatusText = string.Join(" ", tagsResult.Messages.Select(x => x.Text));
             await databaseContext.SaveChangesAsync();
+
+            if (File.Exists(downloadFilename))
+            {
+                try
+                {
+                    File.Delete(downloadFilename);
+                }
+                catch
+                {
+                }
+            }
+
             return;
         }
 
+        var filename = Path.Combine("/music", trackData.Album!.FolderName, trackFileName);
         var outputDirectory = Path.GetDirectoryName(filename)!;
 
         if (!Directory.Exists(outputDirectory))

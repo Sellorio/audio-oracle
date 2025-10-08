@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Providers.YouTube.Services;
@@ -26,7 +27,9 @@ internal class BrowseService(IApiService apiService) : IBrowseService
     {
         var response = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId });
         var contents = response["contents"] ?? throw new InvalidOperationException("Unable to parse browse page.");
-        var playlistId = contents["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!["contents"]![0]!["musicShelfRenderer"]!["contents"]![0]!["musicResponsiveListItemRenderer"]!["overlay"]!["musicItemThumbnailOverlayRenderer"]!["content"]!["musicPlayButtonRenderer"]!["playNavigationEndpoint"]!["watchEndpoint"]!.Get<string>("playlistId")!;
+        var items = contents["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!["contents"]![0]!["musicShelfRenderer"]!["contents"]!;
+        var itemWithNavigationEndpoint = items.Select(x => x!["musicResponsiveListItemRenderer"]!["overlay"]!["musicItemThumbnailOverlayRenderer"]!["content"]!["musicPlayButtonRenderer"]!["playNavigationEndpoint"]).First(x => x != null);
+        var playlistId = itemWithNavigationEndpoint!["watchEndpoint"]!.Get<string>("playlistId")!;
         return playlistId;
     }
 }
