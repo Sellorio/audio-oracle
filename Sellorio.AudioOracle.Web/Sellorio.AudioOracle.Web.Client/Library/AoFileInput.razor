@@ -1,0 +1,22 @@
+﻿@inherits Base.AoDisableComponent
+
+<MudFileUpload T="IBrowserFile"
+               Accept="@(Accept == null || Accept.Count == 0 ? null : string.Join(",", Accept))"
+               Files="Value"
+               FilesChanged="ValueChanged"
+               Disabled="DisableContent">
+    <ActivatorContent>
+        <AoButton Primary Label="@(Value == null ? "Select File" : Value.Name)" />
+    </ActivatorContent>
+</MudFileUpload>
+
+@code {
+    [Parameter]
+    public IList<string>? Accept { get; set; }
+
+    [Parameter]
+    public IBrowserFile? Value { get; set; }
+
+    [Parameter]
+    public EventCallback<IBrowserFile> ValueChanged { get; set; }
+}

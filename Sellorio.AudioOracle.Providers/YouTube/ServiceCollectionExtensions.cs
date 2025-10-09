@@ -1,7 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Net;
-using System.Net.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Sellorio.AudioOracle.Library.DependencyInjection;
 using Sellorio.AudioOracle.Providers.Common;
@@ -21,7 +18,8 @@ public static class ServiceCollectionExtensions
                 o.DefaultRequestHeaders.UserAgent.ParseAdd(ProviderConstants.UserAgent);
                 o.BaseAddress = new Uri("https://music.youtube.com/youtubei/v1/");
             })
-            .ConfigurePrimaryHttpMessageHandler(CreateHandlerFromCookiesFile)
+            .ConfigurePrimaryHttpMessageHandler(
+                () => new HttpClientHandlerWithCookies<IYouTubeAlbumMetadataProvider>(Constants.CookiesPath))
             .AddTypedClient<IApiService, ApiService>();
 
         services
@@ -42,35 +40,5 @@ public static class ServiceCollectionExtensions
             namespacesToInclude: [nameof(YouTube)]);
 
         return services;
-    }
-
-    private static HttpClientHandler CreateHandlerFromCookiesFile()
-    {
-        var cookieContainer = new CookieContainer();
-
-        foreach (var line in File.ReadLines(Constants.CookiesPath))
-        {
-            if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#'))
-                continue; // skip comments and empty lines
-
-            // Format: domain \t flag \t path \t secure \t expiry \t name \t value
-            var parts = line.Split('\t');
-            if (parts.Length != 7)
-                continue; // skip invalid lines
-
-            string domain = parts[0];
-            string path = parts[2];
-            bool secure = parts[3].Equals("TRUE", StringComparison.OrdinalIgnoreCase);
-            string name = parts[5];
-            string value = parts[6];
-
-            cookieContainer.Add(new Cookie(name, value, path, domain.TrimStart('.')));
-        }
-
-        return new HttpClientHandler
-        {
-            CookieContainer = cookieContainer,
-            AutomaticDecompression = DecompressionMethods.All
-        };
     }
 }

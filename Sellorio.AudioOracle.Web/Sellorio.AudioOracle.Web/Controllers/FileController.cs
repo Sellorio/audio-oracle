@@ -1,15 +1,18 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Mime;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Sellorio.AudioOracle.Library.Results;
+using Sellorio.AudioOracle.Library.Results.Messages;
+using Sellorio.AudioOracle.ServiceInterfaces.Content;
 using Sellorio.AudioOracle.Services.Content;
 
 namespace Sellorio.AudioOracle.Web.Controllers;
 
 [ApiController]
-public class FileController(IFileService fileService, IHttpClientFactory httpClientFactory) : ControllerBase
+public class FileController(IFileService fileService, IDataFileService dataFileService, IHttpClientFactory httpClientFactory) : ControllerBase
 {
     private readonly HttpClient _httpClient = httpClientFactory.CreateClient(nameof(FileController));
 
@@ -66,5 +69,17 @@ public class FileController(IFileService fileService, IHttpClientFactory httpCli
         Response.Headers.ContentDisposition = $"inline; filename=\"{result.Value.FileName}\"; filename*=UTF-8''{utf8FileName}";
 
         return File(result.Value.Stream, "audio/mpeg");
+    }
+
+    [HttpPost("api/df")] // df = data file. Endpoint used to provide cookies-youtube.txt for use in the YouTube provider
+    public async Task<IActionResult> PostDataFileAsync(string fileName, [FromForm] IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return ((Result)ResultMessage.Error("Missing file.")).ToActionResult();
+        }
+
+        using var stream = file.OpenReadStream();
+        return await dataFileService.PostDataFileAsync(fileName, file.Length, stream).ToActionResult();
     }
 }

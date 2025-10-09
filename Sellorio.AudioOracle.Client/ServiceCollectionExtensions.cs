@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Sellorio.AudioOracle.Client.Content;
 using Sellorio.AudioOracle.Client.Internal;
 using Sellorio.AudioOracle.Client.Metadata;
 using Sellorio.AudioOracle.Client.Search;
 using Sellorio.AudioOracle.Client.Sessions;
 using Sellorio.AudioOracle.Library.DependencyInjection;
+using Sellorio.AudioOracle.ServiceInterfaces.Content;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
@@ -19,6 +21,9 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IAudioOracleSessionTokenProvider, TSessionTokenProvider>();
         services.AddHttpClient(clientName, o => o.BaseAddress = new System.Uri(baseAddress + "api/"));
+
+        // Content
+        services.TryAddRestClient<IDataFileService, DataFileService>(clientName);
 
         // Metadata
         services.TryAddRestClient<IAlbumService, AlbumService>(clientName);

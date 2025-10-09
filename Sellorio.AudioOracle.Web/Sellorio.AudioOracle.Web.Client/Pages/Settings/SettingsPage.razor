@@ -1,0 +1,35 @@
+﻿@page "/settings"
+@using Sellorio.AudioOracle.Library.Results.Messages
+@using Sellorio.AudioOracle.ServiceInterfaces.Content
+@inject IDataFileService FileService
+
+<AoPanel Title="YouTube Settings">
+    <AoBoxLoader Loading="isSavingYouTubeSettings">
+        <AoForm OnValidSubmit="SaveYouTubeSettingsAsync">
+            <AoFileField Label="Cookies File (.txt)" Accept="@([".txt"])" @bind-Value="youTubeCookiesFile" />
+            <AoResultMessages Result="youTubeSaveResult" />
+            <AoFormButtons>
+                <AoSubmit Label="Save" />
+            </AoFormButtons>
+        </AoForm>
+    </AoBoxLoader>
+</AoPanel>
+
+@code {
+    bool isSavingYouTubeSettings;
+    IResult? youTubeSaveResult;
+    IBrowserFile? youTubeCookiesFile;
+
+    async Task SaveYouTubeSettingsAsync()
+    {
+        if (youTubeCookiesFile != null)
+        {
+            isSavingYouTubeSettings = true;
+            using var uploadStream = youTubeCookiesFile.OpenReadStream();
+            youTubeSaveResult =
+                await FileService.PostDataFileAsync("cookies-youtube.txt", youTubeCookiesFile.Size, uploadStream)
+                    .WithSuccessMessage("Successfully saved.");
+            isSavingYouTubeSettings = false;
+        }
+    }
+}

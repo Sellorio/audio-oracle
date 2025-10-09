@@ -11,3 +11,4 @@ services:
     volumes:
       - "./temp/data:/data"
       - "./temp/music:/music"
+      - "C:/Repos/ytm-grabber/Sellorio.YouTubeMusicGrabber/bin/Debug/net9.0/Music:/import"

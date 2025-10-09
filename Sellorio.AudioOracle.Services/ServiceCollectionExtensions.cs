@@ -7,6 +7,7 @@ using Sellorio.AudioOracle.Models.TaskQueue;
 using Sellorio.AudioOracle.Providers.MusicBrainz;
 using Sellorio.AudioOracle.Providers.SoundCloud;
 using Sellorio.AudioOracle.Providers.YouTube;
+using Sellorio.AudioOracle.ServiceInterfaces.Content;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
@@ -39,6 +40,7 @@ public static class ServiceCollectionExtensions
 
             // Content
             .AddScoped<IContentMapper, ContentMapper>()
+            .AddScoped<IDataFileService, DataFileService>()
             .AddScoped<IFileService, FileService>()
             .AddScoped<IFileTagsService, FileTagsService>()
 

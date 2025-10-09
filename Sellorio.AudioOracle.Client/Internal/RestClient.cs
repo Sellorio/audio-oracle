@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Net.Mime;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -36,6 +38,11 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
         return ExecuteRequest(url, HttpMethod.Post, body);
     }
 
+    public Task<HttpResponseMessage> Post(FormattableString url, Stream body)
+    {
+        return ExecuteRequest(url, HttpMethod.Post, body);
+    }
+
     public Task<HttpResponseMessage> Put(FormattableString url)
     {
         return ExecuteRequest(url, HttpMethod.Put);
@@ -46,12 +53,22 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
         return ExecuteRequest(url, HttpMethod.Put, body);
     }
 
+    public Task<HttpResponseMessage> Put(FormattableString url, Stream body)
+    {
+        return ExecuteRequest(url, HttpMethod.Put, body);
+    }
+
     public Task<HttpResponseMessage> Patch(FormattableString url)
     {
         return ExecuteRequest(url, HttpMethod.Patch);
     }
 
     public Task<HttpResponseMessage> Patch(FormattableString url, object body)
+    {
+        return ExecuteRequest(url, HttpMethod.Patch, body);
+    }
+
+    public Task<HttpResponseMessage> Patch(FormattableString url, Stream body)
     {
         return ExecuteRequest(url, HttpMethod.Patch, body);
     }
@@ -68,18 +85,36 @@ internal class RestClient(HttpClient httpClient, IAudioOracleSessionTokenProvide
 
         if (body != null)
         {
-            var bodyJson = JsonSerializer.Serialize(body, JsonOptions);
-            request.Content = new StringContent(bodyJson, Encoding.UTF8, "application/json");
+            if (body is Stream stream)
+            {
+                var content = new MultipartFormDataContent();
+                var streamContent = new StreamContent(stream);
+                streamContent.Headers.ContentType = new(MediaTypeNames.Application.Octet);
+                content.Add(streamContent, "file", "file");
+                request.Content = content;
+            }
+            else
+            {
+                var bodyJson = JsonSerializer.Serialize(body, JsonOptions);
+                request.Content = new StringContent(bodyJson, Encoding.UTF8, "application/json");
+            }
         }
 
-        var sessionToken = await audioOracleSessionTokenProvider.GetSessionTokenAsync();
-
-        if (sessionToken != null)
+        try
         {
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("aoid", sessionToken);
-        }
+            var sessionToken = await audioOracleSessionTokenProvider.GetSessionTokenAsync();
 
-        return await httpClient.SendAsync(request);
+            if (sessionToken != null)
+            {
+                request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("aoid", sessionToken);
+            }
+
+            return await httpClient.SendAsync(request);
+        }
+        finally
+        {
+            request.Content?.Dispose();
+        }
     }
 
     private static Uri ParseUri(FormattableString url)
