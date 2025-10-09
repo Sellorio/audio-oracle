@@ -10,6 +10,8 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddYouTubeProvider(this IServiceCollection services)
     {
+        var cookieProvider = new CachedCookieProvider(Constants.CookiesPath);
+
         services.AddCommonProviderServices();
 
         services
@@ -19,7 +21,7 @@ public static class ServiceCollectionExtensions
                 o.BaseAddress = new Uri("https://music.youtube.com/youtubei/v1/");
             })
             .ConfigurePrimaryHttpMessageHandler(
-                () => new HttpClientHandlerWithCookies<IYouTubeAlbumMetadataProvider>(Constants.CookiesPath))
+                () => new HttpClientHandlerWithCookies(cookieProvider))
             .AddTypedClient<IApiService, ApiService>();
 
         services
