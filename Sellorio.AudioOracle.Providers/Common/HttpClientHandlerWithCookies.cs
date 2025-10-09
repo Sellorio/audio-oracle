@@ -69,10 +69,10 @@ internal class HttpClientHandlerWithCookies<TCacheScope> : HttpClientHandler
                         }
 
                         CookieContainer = cookieContainer;
-
-                        _cookieFileLastChecked = now;
                         _cookieFileLastModified = newLastModified;
                     }
+
+                    _cookieFileLastChecked = now;
                 }
             }
         }
