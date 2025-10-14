@@ -11,7 +11,7 @@ using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
 
-internal class AlbumMetadataProvider(IApiService apiService, IBrowseService browseService) : IAlbumMetadataProvider, IYouTubeAlbumMetadataProvider
+internal class AlbumMetadataProvider(IApiService apiService, IBrowseService browseService, IPageService pageService) : IAlbumMetadataProvider, IYouTubeAlbumMetadataProvider
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.MaxValue;
@@ -67,7 +67,7 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
 
         // FYI: private uploads do not appear in lists returned by the browse endpoint
         // This is OK since we don't intend to import those from a youtube playlist anyway
-        var trackElements = (await GetTrackElementsWithExpandedContinuationsAsync(apiResult)).ToArray();
+        var trackElements = (await GetTrackElementsWithExpandedContinuationsAsync(resolvedIds)).ToArray();
         var tracks = new AlbumTrackMetadata[trackElements.Length];
 
         for (var i = 0; i < trackElements.Length; i++)
@@ -93,19 +93,20 @@ internal class AlbumMetadataProvider(IApiService apiService, IBrowseService brow
         };
     }
 
-    private async Task<IEnumerable<JsonNavigator?>> GetTrackElementsWithExpandedContinuationsAsync(JsonNavigator apiResult)
+    private async Task<IEnumerable<JsonNavigator?>> GetTrackElementsWithExpandedContinuationsAsync(ResolvedIds resolvedIds)
     {
-        var content = apiResult["contents"]!["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!;
-        var trackElements = content["contents"]![0]!["musicShelfRenderer"]!["contents"]!.AsEnumerable();
-        var continuationInfo = content["continuations"];
+        var pageData = await pageService.GetPageInitialDataAsync("https://music.youtube.com/playlist?list=" + resolvedIds.SourceId);
+        var data = pageData[1];
+        var itemsParent = data["contents"]!["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!["contents"]![0]!;
+        var items = (itemsParent["musicShelfRenderer"] ?? itemsParent["musicPlaylistShelfRenderer"])!["contents"]!;
+        var continuationItemRenderer = items.NthFromLast(0)?["continuationItemRenderer"];
 
-        if (continuationInfo != null)
+        var trackElements = items.AsEnumerable();
+
+        if (continuationItemRenderer != null)
         {
-            for (var i = 0; i < continuationInfo.ArrayLength; i++)
-            {
-                var continuationToken = continuationInfo[i]!["nextContinuationData"]!.Get<string>("continuation")!;
-                trackElements = trackElements.Concat(await GetContinuationTracksAsync(continuationToken));
-            }
+            var continuationToken = continuationItemRenderer["continuationEndpoint"]!["continuationCommand"]!.Get<string>("token")!;
+            trackElements = trackElements.Take(items.ArrayLength - 1).Concat(await GetContinuationTracksAsync(continuationToken));
         }
 
         return trackElements;

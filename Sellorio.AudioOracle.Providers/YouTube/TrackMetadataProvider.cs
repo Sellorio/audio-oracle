@@ -97,7 +97,7 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
             return (fullTitle, null);
         }
 
-        var playerApiResult = await apiService.PostWithContextAsync("/player?prettyPrint=false", new { trackIds.SourceId });
+        var playerApiResult = await apiService.PostWithContextAsync("/player?prettyPrint=false", new { videoId = trackIds.SourceId });
 
         var possibleAlternateTitle = playerApiResult["videoDetails"]!.Get<string>("title");
 
