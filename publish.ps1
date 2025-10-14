@@ -13,9 +13,9 @@ dotnet publish "$PSScriptRoot/Tools/AudioOracleCompanion/AudioOracleCompanion.cs
 	--runtime 'win-x64' `
 	--self-contained true `
 	--output "$publishDir/AudioOracleCompanion" `
-	/p:PublishSingleFile=true `
+	/p:PublishSingleFile=false ` # Can't get assembly location (for config file path) when single file I guess...
 	/p:PublishTrimmed=false # WPF doesn't support trimming, naturally...
 
-#docker compose -f "$PSScriptRoot/docker-compose.yml" build
+docker compose -f "$PSScriptRoot/docker-compose.yml" build
 
 docker save -o "$publishDir/audio-oracle.tar" 'audio-oracle:latest'
