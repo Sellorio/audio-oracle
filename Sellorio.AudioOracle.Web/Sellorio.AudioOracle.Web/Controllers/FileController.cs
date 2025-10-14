@@ -64,9 +64,7 @@ public class FileController(IFileService fileService, IDataFileService dataFileS
             return NotFound();
         }
 
-        var utf8FileName = Uri.EscapeDataString(result.Value.FileName);
-
-        Response.Headers.ContentDisposition = $"inline; filename=\"{result.Value.FileName}\"; filename*=UTF-8''{utf8FileName}";
+        Response.Headers.ContentDisposition = $"inline; filename=\"{RemoveNonAscii(result.Value.FileName)}\"; filename*=UTF-8''{Uri.EscapeDataString(result.Value.FileName)}";
 
         return File(result.Value.Stream, "audio/mpeg");
     }
@@ -81,5 +79,13 @@ public class FileController(IFileService fileService, IDataFileService dataFileS
 
         using var stream = file.OpenReadStream();
         return await dataFileService.PostDataFileAsync(fileName, file.Length, stream).ToActionResult();
+    }
+
+    private string RemoveNonAscii(string input)
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var c in input)
+            if (c <= 127) sb.Append(c);
+        return sb.ToString();
     }
 }
