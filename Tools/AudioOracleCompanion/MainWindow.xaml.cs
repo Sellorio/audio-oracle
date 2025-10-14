@@ -3,6 +3,7 @@ using System.Text;
 using System.Windows;
 
 namespace AudioOracleCompanion;
+
 /// <summary>
 /// Interaction logic for MainWindow.xaml
 /// </summary>
@@ -20,8 +21,13 @@ public partial class MainWindow
 
         while (true)
         {
+            StatusText.Text = "Refreshing YouTube Music...";
+
             WebView.CoreWebView2.Navigate("https://music.youtube.com/");
-            await Task.Delay(4000);
+            await Task.Delay(3000);
+
+            StatusText.Text = "Saving cookies...";
+
             var cookies = await WebView.CoreWebView2.CookieManager.GetCookiesAsync("https://music.youtube.com");
 
             var sb = new StringBuilder(2000);
@@ -69,13 +75,9 @@ public partial class MainWindow
                 }
 
                 // Name and Value: sanitize newlines/tabs which would break the file.
-                string Sanitize(string s)
+                static string Sanitize(string s)
                 {
-                    if (s == null) return "";
-                    return s
-                        .Replace("\r", "")
-                        .Replace("\n", "")
-                        .Replace("\t", "");
+                    return s?.Replace("\r", "").Replace("\n", "").Replace("\t", "") ?? string.Empty;
                 }
 
                 var name = Sanitize(c.Name);
@@ -100,10 +102,12 @@ public partial class MainWindow
 
             // Write file (overwrite)
             await File.WriteAllTextAsync(Path.Combine(Config.DataPath, "cookies-youtube.txt"), sb.ToString().Replace("\r\n", "\n"), Encoding.ASCII);
+            await Task.Delay(1000); // let users see the saving cookies status text
 
+            StatusText.Text = "Standing by...";
+
+            WebView.CoreWebView2.Navigate("about:blank"); // unload youtube to save on resources and avoid cookie invalidation
             await Task.Delay(29 * 60 * 1000); // every 29 minutes
-
-            // Missing: YSC, SIDCC
         }
     }
 }
