@@ -8,7 +8,7 @@ namespace Sellorio.AudioOracle.ServiceInterfaces.Search;
 
 public interface ISearchService
 {
-    Task<ValueResult<IList<SearchResult>>> SearchAsync(string searchText);
+    Task<ValueResult<IList<SearchResult>>> SearchAsync(MetadataSearchPost search);
     Task<ValueResult<IList<DownloadSearchResult>>> SearchForDownloadAsync(int trackId);
     Task<ValueResult<DownloadSource>> SearchForDownloadByUrlAsync(string url);
 }

@@ -10,9 +10,9 @@ namespace Sellorio.AudioOracle.Client.Search;
 
 internal class SearchService(IRestClient restClient) : ISearchService
 {
-    public async Task<ValueResult<IList<SearchResult>>> SearchAsync(string searchText)
+    public async Task<ValueResult<IList<SearchResult>>> SearchAsync(MetadataSearchPost search)
     {
-        return await restClient.Post($"/search{new { searchText }}").ToValueResult<IList<SearchResult>>();
+        return await restClient.Post($"/search", search).ToValueResult<IList<SearchResult>>();
     }
 
     public async Task<ValueResult<IList<DownloadSearchResult>>> SearchForDownloadAsync(int trackId)

@@ -9,11 +9,13 @@ using Sellorio.AudioOracle.Providers.SoundCloud;
 using Sellorio.AudioOracle.Providers.YouTube;
 using Sellorio.AudioOracle.ServiceInterfaces.Content;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
+using Sellorio.AudioOracle.ServiceInterfaces.Providers;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
 using Sellorio.AudioOracle.Services.Content;
 using Sellorio.AudioOracle.Services.Import;
 using Sellorio.AudioOracle.Services.Metadata;
+using Sellorio.AudioOracle.Services.Providers;
 using Sellorio.AudioOracle.Services.Search;
 using Sellorio.AudioOracle.Services.Sessions;
 using Sellorio.AudioOracle.Services.TaskQueue;
@@ -53,6 +55,9 @@ public static class ServiceCollectionExtensions
             .AddScoped<ITrackService, TrackService>()
             .AddScoped<IArtistCreationService, ArtistCreationService>()
             .AddScoped<IAlbumCreationService, AlbumCreationService>()
+
+            // Providers
+            .AddScoped<IProviderCatalogService, ProviderCatalogService>()
 
             // Search
             .AddScoped<ISearchService, SearchService>()

@@ -12,11 +12,73 @@ namespace Sellorio.AudioOracle.Services;
 
 internal class ProviderInvocationService(IServiceProvider serviceProvider, ILogger<ProviderInvocationService> logger) : IProviderInvocationService
 {
-    public async Task<ValueResult<IList<TOutput>>> InvokeAllAsync<TProvider, TOutput>(Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation)
+    public async Task<ValueResult<IList<TOutput>>> InvokeAsync<TProvider, TOutput>(Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation)
         where TProvider : IProvider
     {
         var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
         var providers = providersEnumerable.ToArray();
+
+        return await InvokeAsync(providers, providerInvocation);
+    }
+
+    public async Task<ValueResult<IList<TOutput>>> InvokeAsync<TProvider, TOutput>(IList<string>? providerNames, Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation)
+        where TProvider : IProvider
+    {
+        var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
+        var providers = providersEnumerable.Where(x => providerNames == null || providerNames.Contains(x.ProviderName)).ToArray();
+
+        return await InvokeAsync(providers, providerInvocation);
+    }
+
+    public async Task<ValueResult<TOutput>> InvokeAsync<TProvider, TOutput>(string providerName, Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation)
+        where TProvider : IProvider
+    {
+        var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
+        var provider = providersEnumerable.FirstOrDefault(x => x.ProviderName == providerName);
+
+        if (provider == null)
+        {
+            return ResultMessage.Error($"Missing expected {typeof(TProvider).Name} implementation for {providerName}.");
+        }
+
+        try
+        {
+            return await providerInvocation.Invoke(provider);
+        }
+        catch (Exception ex)
+        {
+            var messages = new List<ResultMessage>();
+            HandleException(ex, provider.ProviderName, messages, ResultMessageSeverity.Critical);
+            return messages[0];
+        }
+    }
+
+    public async Task<Result> InvokeAsync<TProvider>(string providerName, Func<TProvider, Task<Result>> providerInvocation)
+        where TProvider : IProvider
+    {
+        var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
+        var provider = providersEnumerable.FirstOrDefault(x => x.ProviderName == providerName);
+
+        if (provider == null)
+        {
+            return ResultMessage.Error($"Missing expected {typeof(TProvider).Name} implementation for {providerName}.");
+        }
+
+        try
+        {
+            return await providerInvocation.Invoke(provider);
+        }
+        catch (Exception ex)
+        {
+            var messages = new List<ResultMessage>();
+            HandleException(ex, provider.ProviderName, messages, ResultMessageSeverity.Critical);
+            return messages[0];
+        }
+    }
+
+    private async Task<ValueResult<IList<TOutput>>> InvokeAsync<TProvider, TOutput>(TProvider[] providers, Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation)
+        where TProvider : IProvider
+    {
         var tasks = new Task<ValueResult<TOutput>>[providers.Length];
         var results = new List<TOutput>();
         var messages = new List<ResultMessage>();
@@ -76,52 +138,6 @@ internal class ProviderInvocationService(IServiceProvider serviceProvider, ILogg
         }
 
         return ValueResult<IList<TOutput>>.Success(results, messages);
-    }
-
-    public async Task<ValueResult<TOutput>> InvokeAsync<TProvider, TOutput>(string providerName, Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation)
-        where TProvider : IProvider
-    {
-        var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
-        var provider = providersEnumerable.FirstOrDefault(x => x.ProviderName == providerName);
-
-        if (provider == null)
-        {
-            return ResultMessage.Error($"Missing expected {typeof(TProvider).Name} implementation for {providerName}.");
-        }
-
-        try
-        {
-            return await providerInvocation.Invoke(provider);
-        }
-        catch (Exception ex)
-        {
-            var messages = new List<ResultMessage>();
-            HandleException(ex, provider.ProviderName, messages, ResultMessageSeverity.Critical);
-            return messages[0];
-        }
-    }
-
-    public async Task<Result> InvokeAsync<TProvider>(string providerName, Func<TProvider, Task<Result>> providerInvocation)
-        where TProvider : IProvider
-    {
-        var providersEnumerable = serviceProvider.GetRequiredService<IEnumerable<TProvider>>();
-        var provider = providersEnumerable.FirstOrDefault(x => x.ProviderName == providerName);
-
-        if (provider == null)
-        {
-            return ResultMessage.Error($"Missing expected {typeof(TProvider).Name} implementation for {providerName}.");
-        }
-
-        try
-        {
-            return await providerInvocation.Invoke(provider);
-        }
-        catch (Exception ex)
-        {
-            var messages = new List<ResultMessage>();
-            HandleException(ex, provider.ProviderName, messages, ResultMessageSeverity.Critical);
-            return messages[0];
-        }
     }
 
     private void HandleException(Exception ex, string providerName, List<ResultMessage> messages, ResultMessageSeverity severity)

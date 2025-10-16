@@ -11,7 +11,7 @@ using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
 
-internal class TrackMetadataProvider(IApiService apiService, IBrowseService browseService, IYouTubeAlbumMetadataProvider albumMetadataProvider, ITrackIdsResolver trackIdsResolver) : ITrackMetadataProvider
+internal class TrackMetadataProvider(IApiService apiService, IBrowseService browseService, IYouTubeAlbumMetadataProvider albumMetadataProvider, ITrackIdsResolver trackIdsResolver) : IYouTubeTrackMetadataProvider
 {
     private static readonly MemoryCache _cache = new(new MemoryCacheOptions());
     private static readonly TimeSpan _cacheDuration = TimeSpan.MaxValue;
@@ -27,24 +27,17 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
     {
         var albumMetadata = await albumMetadataProvider.GetAlbumMetadataAsync(inputs.AlbumIds);
 
+        var albumMetadataTrack = albumMetadata.Value.Tracks.First(x => x.Ids.SourceId == inputs.TrackIds.SourceId);
+
         var nextApiResult = await apiService.PostWithContextAsync("/next?prettyPrint=false", new { videoId = inputs.TrackIds.SourceId, playlistId = inputs.AlbumIds.SourceId });
+        var playerApiResult = await apiService.PostWithContextAsync("/player?prettyPrint=false", new { videoId = inputs.TrackIds.SourceId });
+
         var infoSection = nextApiResult["contents"]!["singleColumnMusicWatchNextResultsRenderer"]!["tabbedRenderer"]!["watchNextTabbedResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["musicQueueRenderer"]!["content"]!["playlistPanelRenderer"]!["contents"]![0]!["playlistPanelVideoRenderer"]!;
         var byLineSection = infoSection["longBylineText"]!["runs"]!;
+        var videoDetails = playerApiResult["videoDetails"]!;
 
-        var fullTrackTitle = infoSection["title"]!["runs"]![0]!.Get<string>("text")!;
-        var durationString = infoSection["lengthText"]!["runs"]![0]!.Get<string>("text")!;
-
-        if (durationString.Count(x => x == ':') == 1)
-        {
-            if (durationString.Length == 4)
-            {
-                durationString = '0' + durationString;
-            }
-
-            durationString = "00:" + durationString;
-        }
-
-        var duration = TimeSpan.Parse(durationString);
+        var (title, alternateTitle) = GetTitles(albumMetadataTrack.Title, playerApiResult);
+        var duration = TimeSpan.FromSeconds(int.Parse(videoDetails.Get<string>("lengthSeconds")!));
 
         var artistIds = new List<ResolvedIds>(3);
 
@@ -53,8 +46,7 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
             artistIds.Add(await GetArtistIdFromJsonAsync(inputs.AlbumIds, artistElement!));
         }
 
-        var trackNumber = albumMetadata.Value.Tracks.Index().First(x => x.Item.Ids.SourceId == inputs.TrackIds.SourceId).Index + 1;
-        var (title, alternateTitle) = await GetTitlesAsync(inputs.TrackIds, fullTrackTitle);
+        var trackNumber = albumMetadata.Value.Tracks.IndexOf(albumMetadataTrack) + 1;
 
         // make sure we apply any automatic redirects when downloading tracks
         var trackIdResult = await trackIdsResolver.GetLatestIdAsync(inputs.TrackIds.SourceId);
@@ -90,16 +82,14 @@ internal class TrackMetadataProvider(IApiService apiService, IBrowseService brow
         }
     }
 
-    private async Task<(string Title, string? AlternateTitle)> GetTitlesAsync(ResolvedIds trackIds, string fullTitle)
+    private static (string Title, string? AlternateTitle) GetTitles(string fullTitle, JsonNavigator apiResult)
     {
         if (!fullTitle.Contains(" - "))
         {
             return (fullTitle, null);
         }
 
-        var playerApiResult = await apiService.PostWithContextAsync("/player?prettyPrint=false", new { videoId = trackIds.SourceId });
-
-        var possibleAlternateTitle = playerApiResult["videoDetails"]!.Get<string>("title");
+        var possibleAlternateTitle = apiResult["videoDetails"]!.Get<string>("title");
 
         var indexOfSeparator = fullTitle.IndexOf(" - ");
         var title1 = fullTitle[..indexOfSeparator];

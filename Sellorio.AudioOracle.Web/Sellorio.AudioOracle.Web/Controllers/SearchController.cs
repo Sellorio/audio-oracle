@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Sellorio.AudioOracle.Models.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using System.Threading.Tasks;
 
@@ -10,9 +11,9 @@ namespace Sellorio.AudioOracle.Web.Controllers;
 public class SearchController(ISearchService searchService) : ControllerBase
 {
     [HttpPost]
-    public async Task<IActionResult> SearchAsync(string searchText)
+    public async Task<IActionResult> SearchAsync(MetadataSearchPost search)
     {
-        return await searchService.SearchAsync(searchText).ToActionResult();
+        return await searchService.SearchAsync(search).ToActionResult();
     }
 
     [HttpPost("download")]

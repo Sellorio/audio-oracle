@@ -7,7 +7,8 @@ using Sellorio.AudioOracle.Providers;
 namespace Sellorio.AudioOracle.Services;
 internal interface IProviderInvocationService
 {
-    Task<ValueResult<IList<TOutput>>> InvokeAllAsync<TProvider, TOutput>(Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation) where TProvider : IProvider;
+    Task<ValueResult<IList<TOutput>>> InvokeAsync<TProvider, TOutput>(Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation) where TProvider : IProvider;
+    Task<ValueResult<IList<TOutput>>> InvokeAsync<TProvider, TOutput>(IList<string>? providerNames, Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation) where TProvider : IProvider;
     Task<ValueResult<TOutput>> InvokeAsync<TProvider, TOutput>(string providerName, Func<TProvider, Task<ValueResult<TOutput>>> providerInvocation) where TProvider : IProvider;
     Task<Result> InvokeAsync<TProvider>(string providerName, Func<TProvider, Task<Result>> providerInvocation) where TProvider : IProvider;
 }

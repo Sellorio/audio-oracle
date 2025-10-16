@@ -40,12 +40,14 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
 
     private async Task<MetadataSearchResult[]> SearchAsync(string searchText, string @params, Func<JsonNavigator, Task<MetadataSearchResult>> searchResultConverter)
     {
-        var searchResponse = await apiService.PostWithContextAsync("/search?prettyPrint=false", new { @params, query = searchText });
+        var searchResponse = await apiService.PostWithContextAsync("/search?prettyPrint=false", new { @params, query = searchText, inlineSettingStatus = "INLINE_SETTING_STATUS_ON" });
         var searchResultsSectionJson = searchResponse["contents"]?["tabbedSearchResultsRenderer"]?["tabs"]?[0]?["tabRenderer"]?["content"]?["sectionListRenderer"]?["contents"];
-        var searchResultsJson =
-            searchResultsSectionJson![0]!["itemSectionRenderer"] == null
-                ? searchResultsSectionJson![0]!["musicShelfRenderer"]!["contents"]!
-                : searchResultsSectionJson![1]!["musicShelfRenderer"]!["contents"]!; // skip the "Did you mean..." section if it is there
+        var searchResultsJson = searchResultsSectionJson!.AsEnumerable().FirstOrDefault(x => x!["musicShelfRenderer"] != null)?["musicShelfRenderer"]!["contents"];
+
+        if (searchResultsJson == null) // no results
+        {
+            return Array.Empty<MetadataSearchResult>();
+        }
 
         var results = new MetadataSearchResult[searchResultsJson.ArrayLength];
 
@@ -88,7 +90,7 @@ internal class MetadataSearchProvider(IApiService apiService, IBrowseService bro
 
         var artists = new List<string>();
 
-        for (var i = 2; i < artistsSection.ArrayLength - 2; i++)
+        for (var i = 2; i < artistsSection.ArrayLength - 2; i += 2)
         {
             var artistSection =
                 artistsSection[i]

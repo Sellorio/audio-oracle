@@ -53,6 +53,7 @@ public static class ServiceCollectionExtensions
             .AddTransient<IYouTubeAlbumMetadataProvider, AlbumMetadataProvider>()
             .AddTransient<IArtistMetadataProvider, ArtistMetadataProvider>()
             .AddTransient<ITrackMetadataProvider, TrackMetadataProvider>()
+            .AddTransient<IYouTubeTrackMetadataProvider, TrackMetadataProvider>()
             .AddTransient<IDownloadSearchProvider, DownloadSearchProvider>()
             .AddTransient<IDownloadProvider, DownloadProvider>()
             .AddTransient<IYtDlpService, YtDlpService>();

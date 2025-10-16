@@ -1,17 +1,27 @@
 ﻿@using Microsoft.AspNetCore.Components.Authorization
 @using Sellorio.AudioOracle.Web.Client.Services
 @inject NavigationManager NavigationManager
+@inherits Base.AoDisableComponent
+
+<PageTitle>Audio Oracle</PageTitle>
 
 <div class="ao-page-layout">
 	<MudLayout>
 		<MudAppBar>
+			@if (NavContent != null)
+			{
+				<MudIconButton Class="mr-4" Icon="@Icons.Material.Filled.Menu" Color="Color.Secondary" Variant="Variant.Filled" Edge="Edge.Start" DropShadow="false" OnClick="() => isMenuOpen = !isMenuOpen" Disabled="DisableContent" />
+			}
+
 			<MudGrid Spacing="0">
 				<MudItem Style="flex-grow:1">
-					<AoHeading1>Audio Oracle</AoHeading1>
+					<a href="/">
+						<AoHeading1>Audio Oracle</AoHeading1>
+					</a>
 				</MudItem>
 				<MudItem>
 					<AuthorizeView>
-						<AoButton Secondary Label="Logout" OnClick="LogoutAsync" />
+						<MudIconButton Icon="@Icons.Material.Filled.Logout" Color="Color.Secondary" Variant="Variant.Filled" Edge="Edge.End" DropShadow="false" OnClick="LogoutAsync" Disabled="DisableContent" />
 					</AuthorizeView>
 				</MudItem>
 			</MudGrid>
@@ -19,7 +29,7 @@
 
 		@if (NavContent != null)
 		{
-			<MudDrawer Open>
+			<MudDrawer @bind-Open="isMenuOpen">
 				<MudNavMenu>
 					@NavContent
 				</MudNavMenu>
@@ -42,6 +52,8 @@
 </div>
 
 @code {
+	bool isMenuOpen = true;
+
 	[CascadingParameter]
 	public required IAuthenticationProvider AuthenticationProvider { get; set; }
 

@@ -15,11 +15,12 @@ namespace Sellorio.AudioOracle.Services.Search;
 
 internal class SearchService(DatabaseContext databaseContext, IProviderInvocationService providerInvocationService, IEnumerable<IDownloadProvider> downloadProviders) : ISearchService
 {
-    public async Task<ValueResult<IList<SearchResult>>> SearchAsync(string searchText)
+    public async Task<ValueResult<IList<SearchResult>>> SearchAsync(MetadataSearchPost search)
     {
         var providersSearchResult =
-            await providerInvocationService.InvokeAllAsync<IMetadataSearchProvider, PagedList<MetadataSearchResult>>(
-                x => x.SearchForMetadataAsync(searchText, pageSize: 20));
+            await providerInvocationService.InvokeAsync<IMetadataSearchProvider, PagedList<MetadataSearchResult>>(
+                search.IncludedProviders,
+                x => x.SearchForMetadataAsync(search.SearchText, pageSize: 20));
 
         if (!providersSearchResult.WasSuccess)
         {
@@ -79,7 +80,7 @@ internal class SearchService(DatabaseContext databaseContext, IProviderInvocatio
         };
 
         var providersSearchResult =
-            await providerInvocationService.InvokeAllAsync<IDownloadSearchProvider, PagedList<Providers.Models.DownloadSearchResult>>(
+            await providerInvocationService.InvokeAsync<IDownloadSearchProvider, PagedList<AudioOracle.Providers.Models.DownloadSearchResult>>(
                 x => x.SearchForDownloadAsync(criteria, pageSize: 20));
 
         if (!providersSearchResult.WasSuccess)

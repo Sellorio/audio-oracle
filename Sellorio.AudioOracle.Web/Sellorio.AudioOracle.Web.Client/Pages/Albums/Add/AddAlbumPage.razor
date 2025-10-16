@@ -1,15 +1,35 @@
 ﻿@page "/albums/add"
 @using Sellorio.AudioOracle.Models.Metadata
 @using Sellorio.AudioOracle.Models.Search
+@using Sellorio.AudioOracle.ServiceInterfaces.Providers
 @using Sellorio.AudioOracle.ServiceInterfaces.Search
 @using System.Web
 @using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
+@using Sellorio.AudioOracle.Web.Client.Services
+@inject IProviderCatalogService ProviderCatalogService
 @inject ISearchService SearchService
+@inject IResultPopupService ResultPopupService
+@inject ILocalStorageService LocalStorageService
 @inject NavigationManager NavigationManager
 
 <AoPanel>
-	<AoForm OnValidSubmit="SearchAsync">
-		<AoTextField Label="Search" @bind-Value="searchText" Required MaxLength="200" /> 
+	<AoForm OnValidSubmit="SearchAsync" Disabled="isLoading">
+		<AoTextField Label="Search" @bind-Value="searchText" Required MaxLength="200" />
+		<div class="mt-4">
+			@if (searchProviders != null)
+			{
+				@if (searchProviders.Count == 0)
+				{
+					<AoError Message="There are no search providers available." />
+				}
+
+				@foreach (var p in searchProviders)
+				{
+					var provider = p;
+					<AoCheckbox Label="@provider.Name" Value="provider.IsSelected" ValueChanged="x => ProviderSelectedChanged(provider, x)" />
+				}
+			}
+		</div>
 	</AoForm>
 </AoPanel>
 <AoSpace />
@@ -68,6 +88,9 @@
 </AoBoxLoader>
 
 @code {
+	const string SearchProvidersLocalStorageKey = "SearchProviders";
+
+	IList<AvailableSearchProvider>? searchProviders;
 	string? searchText;
 	ValueResult<IList<SearchResult>>? searchResult;
 	bool isLoading;
@@ -75,13 +98,45 @@
 	[CascadingParameter]
 	public required IDialogProvider DialogProvider { get; set; }
 
+	protected override async Task OnInitializedAsync()
+	{
+		isLoading = true;
+
+		var providerInfoResult = await ProviderCatalogService.GetProvidersInfoAsync();
+
+		if (!providerInfoResult.WasSuccess)
+		{
+			await ResultPopupService.ShowResultAsPopupAsync(providerInfoResult, null);
+			return;
+		}
+
+		var selectedProviders = (await LocalStorageService.GetItemAsync(SearchProvidersLocalStorageKey))?.Split(',') ?? [];
+
+		searchProviders =
+			providerInfoResult.Value
+				.Where(x => x.IsMetadataSource)
+				.Select(x => new AvailableSearchProvider
+				{
+					Name = x.Name,
+					IsSelected = selectedProviders.Length == 0 || selectedProviders.Contains(x.Name)
+				})
+				.ToArray();
+
+		isLoading = false;
+	}
+
 	async Task SearchAsync()
 	{
 		isLoading = true;
 
 		try
 		{
-			searchResult = await SearchService.SearchAsync(searchText!);
+			var includedProviders =
+				searchProviders!.All(x => x.IsSelected)
+					? null
+					: searchProviders!.Where(x => x.IsSelected).Select(x => x.Name).ToArray();
+
+			searchResult = await SearchService.SearchAsync(new() { SearchText = searchText!, IncludedProviders = includedProviders });
 		}
 		finally
 		{
@@ -97,5 +152,30 @@
 		{
 			NavigationManager.NavigateTo($"/albums/{result.Value.Id}");
 		}
+	}
+
+	async Task ProviderSelectedChanged(AvailableSearchProvider provider, bool newValue)
+	{
+		provider.IsSelected = newValue;
+
+		var includedProviders =
+			searchProviders!.All(x => x.IsSelected)
+				? null
+				: string.Join(',', searchProviders!.Where(x => x.IsSelected).Select(x => x.Name));
+
+		if (includedProviders == null)
+		{
+			await LocalStorageService.RemoveItemAsync(SearchProvidersLocalStorageKey);
+		}
+		else
+		{
+			await LocalStorageService.SetItemAsync(SearchProvidersLocalStorageKey, includedProviders);
+		}
+	}
+
+	class AvailableSearchProvider
+	{
+		public required string Name { get; set; }
+		public bool IsSelected { get; set; }
 	}
 }

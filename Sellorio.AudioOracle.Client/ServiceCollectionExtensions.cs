@@ -2,11 +2,13 @@
 using Sellorio.AudioOracle.Client.Content;
 using Sellorio.AudioOracle.Client.Internal;
 using Sellorio.AudioOracle.Client.Metadata;
+using Sellorio.AudioOracle.Client.Providers;
 using Sellorio.AudioOracle.Client.Search;
 using Sellorio.AudioOracle.Client.Sessions;
 using Sellorio.AudioOracle.Library.DependencyInjection;
 using Sellorio.AudioOracle.ServiceInterfaces.Content;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
+using Sellorio.AudioOracle.ServiceInterfaces.Providers;
 using Sellorio.AudioOracle.ServiceInterfaces.Search;
 using Sellorio.AudioOracle.ServiceInterfaces.Sessions;
 
@@ -30,6 +32,9 @@ public static class ServiceCollectionExtensions
         services.TryAddRestClient<ITrackService, TrackService>(clientName);
         services.TryAddRestClient<IAlbumCreationService, AlbumCreationService>(clientName);
         services.TryAddRestClient<IArtistCreationService, ArtistCreationService>(clientName);
+
+        // Providers
+        services.TryAddRestClient<IProviderCatalogService, ProviderCatalogService>(clientName);
 
         // Search
         services.TryAddRestClient<ISearchService, SearchService>(clientName);

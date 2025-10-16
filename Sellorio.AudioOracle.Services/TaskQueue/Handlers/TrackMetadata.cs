@@ -42,12 +42,12 @@ internal class TrackMetadata(
             return;
         }
 
-        ValueResult<Providers.Models.TrackMetadata> trackMetadataResult;
+        ValueResult<AudioOracle.Providers.Models.TrackMetadata> trackMetadataResult;
 
         try
         {
             trackMetadataResult =
-                await providerInvocationService.InvokeAsync<ITrackMetadataProvider, Providers.Models.TrackMetadata>(
+                await providerInvocationService.InvokeAsync<ITrackMetadataProvider, AudioOracle.Providers.Models.TrackMetadata>(
                     trackData.MetadataSource,
                     x => x.GetTrackMetadataAsync(
                         new() { SourceId = trackData.Album!.SourceId, SourceUrlId = trackData.Album.SourceUrlId },

@@ -1,6 +1,5 @@
 ﻿using System.IO;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Providers.Common;
@@ -15,12 +14,12 @@ internal partial class DownloadProvider(ITrackIdsResolver trackIdsResolver, IYtD
 
     public bool IsSupportedDownloadUrl(string url)
     {
-        return YouTubeTrackUriRegex().IsMatch(url);
+        return Constants.TrackUriRegex().IsMatch(url);
     }
 
     public async Task<ValueResult<ResolvedIds>> ResolveIdsFromTrackUrlAsync(string downloadUrl)
     {
-        var urlId = YouTubeTrackUriRegex().Match(downloadUrl).Groups[1].Value;
+        var urlId = Constants.TrackUriRegex().Match(downloadUrl).Groups[1].Value;
         var latestIdResult = await trackIdsResolver.GetLatestIdAsync(urlId);
 
         if (!latestIdResult.WasSuccess)
@@ -54,11 +53,4 @@ internal partial class DownloadProvider(ITrackIdsResolver trackIdsResolver, IYtD
         Directory.Delete(tempOutputDir, true);
         return result;
     }
-
-    // Supported Uri Formats:
-    // https://music.youtube.com/watch?v=Cqp-dB7GVI8&list=PLIr8oAMYGij0QrgUfzLyqbwrHfaBtXL1w
-    // https://youtu.be/Cqp-dB7GVI8
-    // https://www.youtube.com/watch?v=Cqp-dB7GVI8
-    [GeneratedRegex(@"^https:\/\/(?:music\.youtube\.com\/watch\?v=|youtu\.be\/|www\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]+)[&a-zA-Z0-9=_]*$", RegexOptions.IgnoreCase)]
-    private static partial Regex YouTubeTrackUriRegex();
 }
