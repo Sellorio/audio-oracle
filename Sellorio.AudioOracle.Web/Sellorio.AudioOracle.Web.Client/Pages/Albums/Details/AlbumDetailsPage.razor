@@ -12,7 +12,10 @@
 		<AoColumns>
 			<AoColumn Weight="1">
 				<AoPanel Title="Details">
-					<img class="album-art" alt="Album Art" src="@("/f/" + albumResult!.Value.AlbumArt.UrlId)">
+					@if (albumResult!.Value.AlbumArt != null)
+					{
+						<img class="album-art" alt="Album Art" src="@("/f/" + albumResult!.Value.AlbumArt.UrlId)">
+					}
 
 					<AoTextField Label="Title" Value="@albumResult.Value.Title" Disabled />
 					<AoTextField Label="Artists" Value="@string.Join("; ", albumResult.Value.Artists.Select(x => x.Name))" Disabled />
