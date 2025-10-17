@@ -17,7 +17,7 @@
 				var trackStatusSummary = GetTrackStatusSummary(album);
 
 				<AoVerticalTile Title="@album.Title"
-								ImageSrc="@($"/f/{album.AlbumArt.UrlId}")"
+								ImageSrc="@(album.AlbumArt == null ? null : $"/f/{album.AlbumArt.UrlId}")"
 								Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
 								Href="@($"/albums/{album.Id}")">
 					<StatusStripContent>
