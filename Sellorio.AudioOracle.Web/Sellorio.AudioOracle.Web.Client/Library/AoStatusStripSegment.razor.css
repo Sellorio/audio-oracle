@@ -24,7 +24,7 @@
 }
 
 .ao-status-strip-item.warning {
-    background: var(--mud-palette-warn);
+    background: var(--mud-palette-warning);
 }
 
 .ao-status-strip-item.info {
