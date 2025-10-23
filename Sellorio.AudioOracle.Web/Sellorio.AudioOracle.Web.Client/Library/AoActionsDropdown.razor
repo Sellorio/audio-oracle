@@ -3,12 +3,7 @@
 
 <MudMenu Dense Disabled="DisableContent || Loading">
 	<ActivatorContent>
-		<MudButton StartIcon="@(Loading ? null : Icons.Material.Filled.Menu)" Variant="Variant.Filled" Color="Color.Primary">
-			@if (Loading)
-			{
-				<MudProgressCircular Size="Size.Small" Indeterminate />
-			}
-		</MudButton>
+		<AoButton Icon="Icon.Menu" Primary Loading="Loading" />
 	</ActivatorContent>
 	<ChildContent>
 		<AoDisableStateProvider>

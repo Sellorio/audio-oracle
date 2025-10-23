@@ -1,4 +1,21 @@
 ﻿.album-art {
+    position: relative;
     width: calc(100% - 16px);
-    margin: 0 8px 30px;
+    padding: 0 8px 30px;
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.album-art img {
+    width: 100%;
+}
+
+.album-art ::deep .ao-image-placeholder {
+    aspect-ratio: 1/1;
+}
+
+.album-art .actions {
+    position: absolute;
+    top: 0;
+    right: 8px;
 }

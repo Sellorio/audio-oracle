@@ -66,6 +66,41 @@ internal class FileService(IHttpClientFactory httpClientFactory, DatabaseContext
         return contentMapper.Map(fileInfoData);
     }
 
+    public async Task<ValueResult<FileInfo>> CreateFileAsync(FileType type, Stream stream)
+    {
+        byte[] data;
+
+        using (var memoryStream = new MemoryStream())
+        {
+            await stream.CopyToAsync(memoryStream);
+            data = memoryStream.ToArray();
+        }
+
+        var fileContentData = new FileContentData
+        {
+            Data = data
+        };
+
+        var fileInfoData = new FileInfoData
+        {
+            Content = fileContentData,
+            Size = data.Length,
+            Type = type,
+            UrlId = await GenerateFileUrlIdAsync(),
+            OriginalUrl = null
+        };
+
+        databaseContext.FileInfos.Add(fileInfoData);
+
+        await databaseContext.SaveChangesAsync();
+
+        databaseContext.Entry(fileInfoData).State = EntityState.Detached;
+        databaseContext.Entry(fileContentData).State = EntityState.Detached;
+        fileInfoData.Content = null;
+
+        return contentMapper.Map(fileInfoData);
+    }
+
     public async Task<ValueResult<FileInfo>> GetByUrlIdAsync(string urlId)
     {
         var data = await databaseContext.FileInfos.AsNoTracking().Include(x => x.Content).SingleOrDefaultAsync(x => x.UrlId == urlId);

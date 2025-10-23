@@ -18,7 +18,10 @@ public abstract class AoDisableComponent : ComponentBase, IDisposable
 
     protected override void OnInitialized()
     {
-        DisableStateScope.IsDisabledChanged += DisabledChanged;
+        if (DisableStateScope != null)
+        {
+            DisableStateScope.IsDisabledChanged += DisabledChanged;
+        }
     }
 
     private void DisabledChanged()
@@ -30,7 +33,7 @@ public abstract class AoDisableComponent : ComponentBase, IDisposable
     {
         if (!isDisposed)
         {
-            if (disposing)
+            if (disposing && DisableStateScope != null)
             {
                 DisableStateScope.IsDisabledChanged -= DisabledChanged;
             }

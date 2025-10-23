@@ -1,7 +1,10 @@
 ﻿@page "/albums/{Id:int}"
+@using Sellorio.AudioOracle.Library.Results.Messages
+@using Sellorio.AudioOracle.Models.Content
 @using Sellorio.AudioOracle.Models.Metadata
 @using Sellorio.AudioOracle.ServiceInterfaces.Metadata
 @using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
+@using System.IO
 @inject NavigationManager NavigationManager
 @inject IAlbumService AlbumService
 @inject ITrackService TrackService
@@ -12,10 +15,21 @@
 		<AoColumns>
 			<AoColumn Weight="1">
 				<AoPanel Title="Details">
-					@if (albumResult!.Value.AlbumArt != null)
-					{
-						<img class="album-art" alt="Album Art" src="@("/f/" + albumResult!.Value.AlbumArt.UrlId)">
-					}
+					<div class="album-art">
+						@if (albumResult!.Value.AlbumArt != null)
+						{
+							<img alt="Album Art" src="@("/f/" + albumResult!.Value.AlbumArt.UrlId)">
+						}
+						else
+						{
+							<AoImagePlaceholder />
+						}
+
+						<div class="actions">
+							<AoButton Icon="albumResult!.Value.AlbumArt == null ? Icon.Add : Icon.Edit" NoBorder OnClick="OpenAlbumArtFileSelectAsync"/>
+							<AoFileInput @ref="fileInput" Hidden ValueChanged="UpdateAlbumArtAsync" />
+						</div>
+					</div>
 
 					<AoTextField Label="Title" Value="@albumResult.Value.Title" Disabled />
 					<AoTextField Label="Artists" Value="@string.Join("; ", albumResult.Value.Artists.Select(x => x.Name))" Disabled />
@@ -72,6 +86,7 @@
 	bool isLoading = true;
 	ValueResult<Album>? albumResult;
 	IResult? actionResult;
+	AoFileInput? fileInput;
 
 	[CascadingParameter]
 	public required IDialogProvider DialogProvider { get; set; }
@@ -103,6 +118,51 @@
 		if (deleteResult.WasSuccess)
 		{
 			NavigationManager.NavigateTo("/albums");
+		}
+	}
+
+	async Task OpenAlbumArtFileSelectAsync()
+	{
+		await fileInput!.OpenAsync();
+	}
+
+	async Task UpdateAlbumArtAsync(IBrowserFile albumArtFile)
+	{
+		if (albumArtFile == null)
+		{
+			return;
+		}
+
+		var fileType = Path.GetExtension(albumArtFile!.Name).ToLower() switch
+		{
+			".png" => FileType.ImagePng,
+			".jpg" or ".jpeg" => FileType.ImageJpeg,
+			_ => FileType.Unspecified
+		};
+
+		if (fileType == FileType.Unspecified)
+		{
+			await fileInput!.ClearAsync();
+			await ResultPopupService.ShowResultAsPopupAsync((Result)ResultMessage.Error("File must be png or jpg."), null);
+			return;
+		}
+
+		ValueResult<Album> result;
+
+		using (var stream = albumArtFile.OpenReadStream())
+		{
+			result = await AlbumService.UpdateAlbumArtAsync(Id, fileType, stream);
+		}
+
+		await fileInput!.ClearAsync();
+
+		if (result.WasSuccess)
+		{
+			albumResult!.Value.AlbumArt = result.Value.AlbumArt;
+		}
+		else
+		{
+			await ResultPopupService.ShowResultAsPopupAsync(result, null);
 		}
 	}
 }

@@ -5,19 +5,21 @@
 		<MudPaper>
 			@if (Title != null)
 			{
-				<div class="title">
-					<AoAutoFitText Content="@Title" />
-				</div>
+				<div class="title">@Title</div>
 			}
 
 			@if (ImageSrc != null)
 			{
 				<img class="image" src="@ImageSrc" alt="Tile Image">
 			}
-
-			@if (Content != null)
+			else if (ImagePlaceholderFallback)
 			{
-				<div class="content">@Content</div>
+				<AoImagePlaceholder />
+			}
+
+			@if (ChildContent != null)
+			{
+				<div class="content">@ChildContent</div>
 			}
 
 			@if (ActionsContent != null)
@@ -45,13 +47,16 @@
 	public string? ImageSrc { get; set; }
 
 	[Parameter]
-	public string? Content { get; set; }
-
-	[Parameter]
 	public string? Href { get; set; }
 
 	[Parameter]
+	public bool ImagePlaceholderFallback { get; set; }
+
+	[Parameter]
 	public RenderFragment? ActionsContent { get; set; }
+
+	[Parameter]
+	public RenderFragment? ChildContent { get; set; }
 
 	[Parameter]
 	public RenderFragment? StatusStripContent { get; set; }

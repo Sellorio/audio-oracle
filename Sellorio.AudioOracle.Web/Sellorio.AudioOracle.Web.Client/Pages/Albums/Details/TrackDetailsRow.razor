@@ -8,7 +8,7 @@
 	<td>@Track.TrackNumber</td>
 	<td>@Track.Title</td>
 	<td>@Track.AlternateTitle</td>
-	<td>@(Track.Duration == null ? null : $"{(int)Track.Duration.Value.TotalMinutes}:{Track.Duration.Value.Seconds}")</td>
+	<td>@(Track.Duration == null ? null : $"{(int)Track.Duration.Value.TotalMinutes}:{Track.Duration.Value.Seconds.ToString().PadLeft(2, '0')}")</td>
 	<td>
 		@{
 			var statusTitle = Track.Status.GetDisplay(out var statusDescription);

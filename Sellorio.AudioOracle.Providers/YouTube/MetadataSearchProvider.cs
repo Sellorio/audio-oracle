@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using Sellorio.AudioOracle.Library;
 using Sellorio.AudioOracle.Library.ApiTools;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Search;
@@ -10,198 +12,122 @@ using Sellorio.AudioOracle.Providers.YouTube.Services;
 
 namespace Sellorio.AudioOracle.Providers.YouTube;
 
-internal class MetadataSearchProvider(IApiService apiService, IBrowseService browseService) : IMetadataSearchProvider
+internal class MetadataSearchProvider(IPageService pageService, IBrowseService browseService) : IMetadataSearchProvider
 {
     public string ProviderName => Constants.ProviderName;
 
     public async Task<ValueResult<PagedList<MetadataSearchResult>>> SearchForMetadataAsync(string searchText, int pageSize)
     {
-        var albumSearchResults = await SearchAsync(searchText, Constants.SearchByAlbumsParams, ConvertAlbumResultAsync);
-        var songSearchResults = await SearchAsync(searchText, Constants.SearchBySongsParams, ConvertSongResultAsync);
+        var pageDatas = await pageService.GetPageInitialDataAsync("https://music.youtube.com/search?q=" + WebUtility.UrlEncode(searchText));
+        var pageData = pageDatas[1];
 
-        var albumsToTake =
-            Math.Min(
-                albumSearchResults.Length,
-                (pageSize / 2) + ((pageSize / 2) - Math.Min(pageSize / 2, songSearchResults.Length)));
+        var resultsContainer = pageData["contents"]!["tabbedSearchResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["sectionListRenderer"]!["contents"]!;
+        var mainResult = resultsContainer[0]!["musicCardShelfRenderer"]!;
+        var otherResults = resultsContainer[1]!["musicShelfRenderer"]!;
 
-        var songsToTake = pageSize - albumsToTake;
+        var resultItems = new List<MetadataSearchResult>(20);
+
+        var mainResultItem = await ConvertResultAsync(mainResult, isCard: true);
+
+        if (mainResultItem != null)
+        {
+            resultItems.Add(mainResultItem);
+        }
+
+        foreach (var otherResult in otherResults["contents"]!.AsEnumerable())
+        {
+            var otherResultItem = await ConvertResultAsync(otherResult!["musicResponsiveListItemRenderer"]!, isCard: false);
+
+            if (otherResultItem != null)
+            {
+                resultItems.Add(otherResultItem);
+            }
+        }
 
         return new PagedList<MetadataSearchResult>
         {
-            Items =
-                Enumerable.Concat(
-                    albumSearchResults.Take(albumsToTake),
-                    songSearchResults.Take(songsToTake))
-                        .ToArray(),
+            Items = resultItems,
             Page = 1,
-            PageSize = pageSize
+            PageSize = Math.Max(pageSize, resultItems.Count)
         };
     }
 
-    private async Task<MetadataSearchResult[]> SearchAsync(string searchText, string @params, Func<JsonNavigator, Task<MetadataSearchResult>> searchResultConverter)
+    private async Task<MetadataSearchResult?> ConvertResultAsync(JsonNavigator navigator, bool isCard)
     {
-        var searchResponse = await apiService.PostWithContextAsync("/search?prettyPrint=false", new { @params, query = searchText, inlineSettingStatus = "INLINE_SETTING_STATUS_ON" });
-        var searchResultsSectionJson = searchResponse["contents"]?["tabbedSearchResultsRenderer"]?["tabs"]?[0]?["tabRenderer"]?["content"]?["sectionListRenderer"]?["contents"];
-        var searchResultsJson = searchResultsSectionJson!.AsEnumerable().FirstOrDefault(x => x!["musicShelfRenderer"] != null)?["musicShelfRenderer"]!["contents"];
-
-        if (searchResultsJson == null) // no results
-        {
-            return Array.Empty<MetadataSearchResult>();
-        }
-
-        var results = new MetadataSearchResult[searchResultsJson.ArrayLength];
-
-        for (var i = 0; i < searchResultsJson.ArrayLength; i++)
-        {
-            results[i] =
-                await searchResultConverter.Invoke(
-                    searchResultsJson[i]
-                        ?? throw new InvalidOperationException("Unable to parse search results."));
-        }
-
-        return results;
-    }
-
-    private Task<MetadataSearchResult> ConvertAlbumResultAsync(JsonNavigator navigator)
-    {
-        var root =
-            navigator["musicResponsiveListItemRenderer"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
-
         var thumbnailUrl =
-            root["thumbnail"]?["musicThumbnailRenderer"]?["thumbnail"]?["thumbnails"]?.NthFromLast(0)?.Get<string>("url")
+            navigator["thumbnail"]?["musicThumbnailRenderer"]?["thumbnail"]?["thumbnails"]?.NthFromLast(0)?.Get<string>("url")
                 ?? throw new InvalidOperationException("Unable to parse search results.");
 
-        var infoRoot =
-            root["flexColumns"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+        var resultType =
+            isCard
+                ? navigator["subtitle"]!["runs"]![0]!.Get<string>("text")!
+                : navigator["flexColumns"]![1]!["musicResponsiveListItemFlexColumnRenderer"]!["text"]!["runs"]![0]!.Get<string>("text")!;
 
-        var titleSection =
-            infoRoot[0]?["musicResponsiveListItemFlexColumnRenderer"]?["text"]?["runs"]?[0]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+        if (resultType is not "Album" and not "Song")
+        {
+            return null;
+        }
 
         var title =
-            titleSection.Get<string>("text")
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+            isCard
+                ? navigator["title"]!["runs"]![0]!.Get<string>("text")!
+                : navigator["flexColumns"]![0]!["musicResponsiveListItemFlexColumnRenderer"]!["text"]!["runs"]![0]!.Get<string>("text")!;
 
-        var artistsSection =
-            infoRoot[1]?["musicResponsiveListItemFlexColumnRenderer"]?["text"]?["runs"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+        IList<string> artistNames;
 
-        var artists = new List<string>();
-
-        for (var i = 2; i < artistsSection.ArrayLength - 2; i += 2)
+        if (isCard)
         {
-            var artistSection =
-                artistsSection[i]
-                    ?? throw new InvalidOperationException("Unable to parse search results.");
-
-            var artistName =
-                artistSection.Get<string>("text")
-                    ?? throw new InvalidOperationException("Unable to parse search results.");
-
-            artists.Add(artistName);
+            var subtitleRuns = navigator["subtitle"]!["runs"]!;
+            var artistElements = subtitleRuns.AsEnumerable().Skip(2).Take(subtitleRuns.ArrayLength - 4).SkipEvery(2);
+            artistNames = artistElements.Select(x => x!.Get<string>("text")!).ToArray();
+        }
+        else
+        {
+            var subtitleRuns = navigator["flexColumns"]![1]!["musicResponsiveListItemFlexColumnRenderer"]!["text"]!["runs"]!;
+            var artistElements = subtitleRuns.AsEnumerable().Skip(2).Take(subtitleRuns.ArrayLength - 4).SkipEvery(2);
+            artistNames = artistElements.Select(x => x!.Get<string>("text")!).ToArray();
         }
 
-        var albumId =
-            root["menu"]?["menuRenderer"]?["items"]?[0]?["menuNavigationItemRenderer"]?["navigationEndpoint"]?["watchPlaylistEndpoint"]?.Get<string>("playlistId")
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+        string albumId;
+        string albumBrowseId;
+        string albumTitle;
 
-        var albumBrowseId = root["navigationEndpoint"]!["browseEndpoint"]!.Get<string>("browseId")!;
-
-        return Task.FromResult(new MetadataSearchResult
+        if (resultType == "Album")
         {
-            AlbumArtUrl = thumbnailUrl,
-            AlbumIds = new() { SourceId = albumId, SourceUrlId = albumBrowseId },
-            AlbumTitle = title,
-            AlternateAlbumTitle = null,
-            Title = title,
-            AlternateTitle = null,
-            ArtistNames = artists,
-            Source = Constants.ProviderName,
-            Type = SearchResultType.Album
-        });
-    }
+            albumId =
+                isCard
+                    ? navigator["buttons"]![0]!["buttonRenderer"]!["command"]!["watchEndpoint"]!.Get<string>("playlistId")!
+                    : navigator["overlay"]!["musicItemThumbnailOverlayRenderer"]!["content"]!["musicPlayButtonRenderer"]!["playNavigationEndpoint"]!["watchEndpoint"]!.Get<string>("playlistId")!;
 
-    private async Task<MetadataSearchResult> ConvertSongResultAsync(JsonNavigator navigator)
-    {
-        var root =
-            navigator["musicResponsiveListItemRenderer"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
+            albumBrowseId =
+                isCard
+                    ? navigator["title"]!["runs"]![0]!["navigationEndpoint"]!["browseEndpoint"]!.Get<string>("browseId")!
+                    : navigator["navigationEndpoint"]!["browseEndpoint"]!.Get<string>("browseId")!;
 
-        var thumbnailUrl =
-            root["thumbnail"]?["musicThumbnailRenderer"]?["thumbnail"]?["thumbnails"]?.NthFromLast(0)?.Get<string>("url")
-                ?? throw new InvalidOperationException("Unable to parse search results.");
-
-        var infoRoot =
-            root["flexColumns"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
-
-        var titleSection =
-            infoRoot[0]?["musicResponsiveListItemFlexColumnRenderer"]?["text"]?["runs"]?[0]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
-
-        var title =
-            titleSection.Get<string>("text")
-                ?? throw new InvalidOperationException("Unable to parse search results.");
-
-        var albumArtistSection =
-            infoRoot[1]?["musicResponsiveListItemFlexColumnRenderer"]?["text"]?["runs"]
-                ?? throw new InvalidOperationException("Unable to parse search results.");
-
-        var artists = new List<string>();
-        (string Id, string BrowseId, string Title)? album = null;
-
-        for (var i = 0; i < albumArtistSection.ArrayLength; i += 2)
+            albumTitle = title;
+        }
+        else
         {
-            if (i == albumArtistSection.ArrayLength - 1) // track duration/album year
-            {
-                // we don't care about track duration in search
-            }
-            else if (i == albumArtistSection.ArrayLength - 3) // album
-            {
-                var albumSection =
-                    albumArtistSection[i]
-                        ?? throw new InvalidOperationException("Unable to parse search results.");
+            albumBrowseId =
+                navigator["menu"]!["menuRenderer"]!["items"]!.Where(x => x["menuNavigationItemRenderer"]?["icon"]!.Get<string>("iconType") == "ALBUM").First()["menuNavigationItemRenderer"]!["navigationEndpoint"]!["browseEndpoint"]!.Get<string>("browseId")!;
 
-                var albumTitle =
-                    albumSection.Get<string>("text")
-                        ?? throw new InvalidOperationException("Unable to parse search results.");
+            var albumBasicInfo = await browseService.ResolveAlbumBasicInfoFromBrowseIdAsync(albumBrowseId);
 
-                var albumBrowseId =
-                    albumSection["navigationEndpoint"]?["browseEndpoint"]?.Get<string>("browseId")
-                        ?? throw new InvalidOperationException("Unable to parse search results.");
-
-                var albumId = await browseService.ResolveAlbumIdFromBrowseIdAsync(albumBrowseId);
-
-                album = (albumId, albumBrowseId, albumTitle);
-            }
-            else // artist
-            {
-                var artistSection =
-                    albumArtistSection[i]
-                        ?? throw new InvalidOperationException("Unable to parse search results.");
-
-                var artistName =
-                    artistSection.Get<string>("text")
-                        ?? throw new InvalidOperationException("Unable to parse search results.");
-
-                artists.Add(artistName);
-            }
+            albumId = albumBasicInfo.AlbumId;
+            albumTitle = albumBasicInfo.Title;
         }
 
         return new MetadataSearchResult
         {
-            AlbumArtUrl = thumbnailUrl,
-            AlbumIds = new() { SourceId = album!.Value.Id, SourceUrlId = album.Value.BrowseId },
-            AlbumTitle = album.Value.Title,
-            AlternateAlbumTitle = null,
             Title = title,
-            // to avoid delays processing a search, we'll ignore alternate title in this step - it'll be handled when getting track metadata during an add
+            AlbumArtUrl = thumbnailUrl,
+            AlbumIds = new() { SourceId = albumId, SourceUrlId = albumBrowseId },
+            AlbumTitle = albumTitle,
+            AlternateAlbumTitle = null,
             AlternateTitle = null,
-            ArtistNames = artists,
-            Source = Constants.ProviderName,
-            Type = SearchResultType.Track
+            ArtistNames = artistNames,
+            Source = ProviderName,
+            Type = resultType == "Album" ? SearchResultType.Album : SearchResultType.Track
         };
     }
 }

@@ -38,8 +38,9 @@ internal class ArtistMetadataProvider(IApiService apiService) : IArtistMetadataP
             {
                 // channelId is a valid browseId as well! There is no dedicated endpoint for getting artist information.
                 var artistData = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId = artistId });
-                var header = artistData["header"]!["musicImmersiveHeaderRenderer"]!;
-                var artistName = header["title"]!["runs"]![0]!.Get<string>("text")!.Trim();
+                var header = artistData["header"]!;
+                var headerRenderer = header["musicImmersiveHeaderRenderer"] ?? header["musicVisualHeaderRenderer"]!;
+                var artistName = headerRenderer["title"]!["runs"]![0]!.Get<string>("text")!.Trim();
 
                 result[i] = new ArtistMetadata
                 {

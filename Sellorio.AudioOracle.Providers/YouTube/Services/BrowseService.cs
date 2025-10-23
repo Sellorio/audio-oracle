@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
+using Sellorio.AudioOracle.Providers.YouTube.Models;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,7 +11,7 @@ internal class BrowseService(IApiService apiService) : IBrowseService
     private static readonly TimeSpan _cacheDuration = TimeSpan.FromMinutes(30);
     private static readonly MemoryCache _browseToAlbumIdCache = new(new MemoryCacheOptions());
 
-    public async Task<string> ResolveAlbumIdFromBrowseIdAsync(string browseId)
+    public async Task<AlbumBrowseBasicInfo> ResolveAlbumBasicInfoFromBrowseIdAsync(string browseId)
     {
         return await ProviderHelper.GetWithCacheAsync(_browseToAlbumIdCache, _cacheDuration, browseId, InnerResolveAlbumIdFromBrowseIdAsync);
     }
@@ -19,17 +20,23 @@ internal class BrowseService(IApiService apiService) : IBrowseService
     {
         var response = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId });
         var header = response["header"] ?? throw new InvalidOperationException("Unable to parse browse page.");
-        var channelId = header["musicImmersiveHeaderRenderer"]!["subscriptionButton"]!["subscribeButtonRenderer"]!.Get<string>("channelId")!;
+        var headerRenderer = header["musicImmersiveHeaderRenderer"] ?? header["musicVisualHeaderRenderer"]!;
+        var channelId = headerRenderer["subscriptionButton"]!["subscribeButtonRenderer"]!.Get<string>("channelId")!;
         return channelId;
     }
 
-    private async Task<string> InnerResolveAlbumIdFromBrowseIdAsync(string browseId)
+    private async Task<AlbumBrowseBasicInfo> InnerResolveAlbumIdFromBrowseIdAsync(string browseId)
     {
         var response = await apiService.PostWithContextAsync("/browse?prettyPrint=false", new { browseId });
         var contents = response["contents"] ?? throw new InvalidOperationException("Unable to parse browse page.");
-        var items = contents["twoColumnBrowseResultsRenderer"]!["secondaryContents"]!["sectionListRenderer"]!["contents"]![0]!["musicShelfRenderer"]!["contents"]!;
-        var itemWithNavigationEndpoint = items.Select(x => x!["musicResponsiveListItemRenderer"]!["overlay"]!["musicItemThumbnailOverlayRenderer"]!["content"]!["musicPlayButtonRenderer"]!["playNavigationEndpoint"]).First(x => x != null);
-        var playlistId = itemWithNavigationEndpoint!["watchEndpoint"]!.Get<string>("playlistId")!;
-        return playlistId;
+        var headerElement = contents["twoColumnBrowseResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["sectionListRenderer"]!["contents"]![0]!["musicResponsiveHeaderRenderer"]!;
+        var playlistId = headerElement["buttons"]!.Select(x => x!["musicPlayButtonRenderer"]).First(x => x != null)!["playNavigationEndpoint"]!["watchPlaylistEndpoint"]!.Get<string>("playlistId")!;
+        var playlistName = headerElement["title"]!["runs"]![0]!.Get<string>("text")!;
+
+        return new AlbumBrowseBasicInfo
+        {
+            AlbumId = playlistId,
+            Title = playlistName
+        };
     }
 }

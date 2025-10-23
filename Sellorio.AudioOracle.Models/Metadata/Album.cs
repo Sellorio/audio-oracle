@@ -12,7 +12,7 @@ public class Album
     public const int TitleMaxLength = 300;
 
     public required int Id { get; init; }
-    public required FileInfo AlbumArt { get; init; }
+    public required FileInfo AlbumArt { get; set; }
     public required IList<Track> Tracks { get; init; }
 
     public required string Title { get; init; }

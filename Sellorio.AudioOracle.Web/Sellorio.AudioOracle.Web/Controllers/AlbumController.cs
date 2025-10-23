@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using System.Threading.Tasks;
@@ -32,5 +34,12 @@ public class AlbumController(IAlbumService albumService, IAlbumCreationService a
     public async Task<IActionResult> DeleteAsync(int id, bool deleteFiles = true)
     {
         return await albumService.DeleteAlbumAsync(id, deleteFiles).ToActionResult();
+    }
+
+    [HttpPut("{id:int}/art")]
+    public async Task<IActionResult> PutArtAsync(int id, FileType imageType, [FromForm] IFormFile file)
+    {
+        using var stream = file.OpenReadStream();
+        return await albumService.UpdateAlbumArtAsync(id, imageType, stream).ToActionResult();
     }
 }

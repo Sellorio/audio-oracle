@@ -143,7 +143,7 @@ internal class DownloadTrack(
 
     private static string EscapePathItem(string value)
     {
-        var invalidCharacters = Enumerable.Union(Path.GetInvalidPathChars(), Path.GetInvalidFileNameChars());
+        var invalidCharacters = (char[])[..Path.GetInvalidPathChars(), ..Path.GetInvalidFileNameChars(), '"'];
         var result = new StringBuilder(value.Length);
 
         foreach (char c in value)

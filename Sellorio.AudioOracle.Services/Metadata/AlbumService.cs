@@ -4,9 +4,11 @@ using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Data.Metadata;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
+using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
-internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper, IFileService fileService) : IAlbumService
+internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper, IFileService fileService, IRefreshTrackTagsTaskQueuingService refreshTrackTagsTaskQueuingService) : IAlbumService
 {
     public async Task<ValueResult<IList<Album>>> GetAlbumsAsync(AlbumFields fields = AlbumFields.None)
     {
@@ -73,6 +75,52 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
 
             return Result.Success();
         });
+    }
+
+    public async Task<ValueResult<Album>> UpdateAlbumArtAsync(int id, FileType imageType, Stream stream)
+    {
+        if (imageType is not FileType.ImagePng and not FileType.ImageJpeg)
+        {
+            return ResultMessage.Error("Can only be a PNG or JPG file.");
+        }
+
+        var result = await databaseContext.WithTransaction<ValueResult<Album>>(async transaction =>
+        {
+            var albumData = await databaseContext.Albums.FindAsync(id);
+
+            if (albumData == null)
+            {
+                return ResultMessage.NotFound("Album");
+            }
+
+            var fileCreateResult = await fileService.CreateFileAsync(imageType, stream);
+
+            if (!fileCreateResult.WasSuccess)
+            {
+                return ValueResult<Album>.Failure(fileCreateResult.Messages);
+            }
+
+            albumData.AlbumArtId = fileCreateResult.Value.Id;
+
+            await databaseContext.SaveChangesAsync();
+
+            var album = mapper.Map(albumData);
+            album.AlbumArt = fileCreateResult.Value;
+
+            return album;
+        });
+
+        if (result.WasSuccess)
+        {
+            var tracks = await databaseContext.Tracks.Where(x => x.AlbumId == id && x.Filename != null).ToArrayAsync();
+
+            foreach (var track in tracks)
+            {
+                await refreshTrackTagsTaskQueuingService.QueueAsync(track.Id);
+            }
+        }
+
+        return result;
     }
 
     private static IQueryable<AlbumData> WithFields(IQueryable<AlbumData> query, AlbumFields fields)

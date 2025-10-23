@@ -11,15 +11,23 @@
 	}
 	else
 	{
+		<AoPanel>
+			<AoCheckbox Label="Only albums requiring attention" Value="onlyAlbumsRequiringAttention" ValueChanged="OnlyAlbumsRequiringAttentionChanged" />
+		</AoPanel>
+
 		<AoTiles>
-			@foreach (var album in albumsResult.Value)
+			@foreach (var album in albumsToShow!)
 			{
 				var trackStatusSummary = GetTrackStatusSummary(album);
 
 				<AoVerticalTile Title="@album.Title"
-								ImageSrc="@(album.AlbumArt == null ? null : $"/f/{album.AlbumArt.UrlId}")"
-								Content="@($"Album by {string.Join(", ", album.Artists.Select(x => x.Name))}")"
+								ImageSrc="@(album.AlbumArt == null ? null : $"/f/{album.AlbumArt.UrlId}")" ImagePlaceholderFallback
 								Href="@($"/albums/{album.Id}")">
+					<ChildContent>
+						<div class="album-details">
+							@(string.Join("; ", album.Artists.Select(x => x.Name)))
+						</div>
+					</ChildContent>
 					<StatusStripContent>
 						@if (trackStatusSummary.Imported > 0)
 						{
@@ -54,10 +62,13 @@
 
 @code {
 	ValueResult<IList<Album>>? albumsResult;
+	IList<Album>? albumsToShow;
+	bool onlyAlbumsRequiringAttention;
 
 	protected override async Task OnInitializedAsync()
 	{
 		albumsResult = await AlbumService.GetAlbumsAsync(AlbumFields.Tracks | AlbumFields.Artists);
+		albumsToShow = albumsResult.WasSuccess ? albumsResult.Value : [];
 	}
 
 	Task AlbumClickedAsync()
@@ -68,10 +79,10 @@
 	(byte Failed, byte MissingSource, byte InProgress, byte NotRequested, byte Imported) GetTrackStatusSummary(Album album)
 	{
 		byte failed = 0,
-			 missingSource = 0,
-			 inProgress = 0,
-			 notRequested = 0,
-			 imported = 0;
+				missingSource = 0,
+				inProgress = 0,
+				notRequested = 0,
+				imported = 0;
 
 		foreach (var track in album.Tracks)
 		{
@@ -98,5 +109,19 @@
 		}
 
 		return (failed, missingSource, inProgress, notRequested, imported);
+	}
+
+	void OnlyAlbumsRequiringAttentionChanged(bool newValue)
+	{
+		onlyAlbumsRequiringAttention = newValue;
+		
+		albumsToShow =
+			onlyAlbumsRequiringAttention
+				? albumsResult!.Value
+					.Where(x =>
+						x.Tracks.Any(y =>
+							y.Status is TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed or TrackStatus.MissingDownloadSource))
+					.ToArray()
+				: albumsResult!.Value;
 	}
 }

@@ -75,10 +75,12 @@ public static class ServiceCollectionExtensions
                 // Handlers
                 .AddScoped<ITaskHandler, TrackMetadata>()
                 .AddScoped<ITaskHandler, DownloadTrack>()
+                .AddScoped<ITaskHandler, RefreshTrackTags>()
 
                 // Queuers
                 .AddScoped<ITrackMetadataTaskQueuingService, TrackMetadataTaskQueuingService>()
                 .AddScoped<IDownloadTrackTaskQueuingService, DownloadTrackTaskQueuingService>()
+                .AddScoped<IRefreshTrackTagsTaskQueuingService, RefreshTrackTagsTaskQueuingService>()
             ;
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(

@@ -1,13 +1,26 @@
 ﻿@inherits Base.AoDisableComponent
 
-<span class="ao-button">
+<span class="@("ao-button" + (Label == null ? " no-label" : ""))">
 	<MudButton Variant="GetButtonVariant()" Color="GetButtonColor()" ButtonType="ButtonType.Button" Disabled="DisableContent || isExecuting || Loading" OnClick="OnClick">
-		@Label
+		<MudGrid>
+			@if (Label != null)
+			{
+				<MudItem>@Label</MudItem>
+			}
 
-		@if (isExecuting || Loading)
-		{
-			<MudProgressCircular Size="Size.Small" Indeterminate Style="margin-left:10px" />
-		}
+			@if (isExecuting || Loading)
+			{
+				<MudItem>
+					<MudProgressCircular Size="Size.Small" Indeterminate />
+				</MudItem>
+			}
+			else if (Icon != null)
+			{
+				<MudItem>
+					<MudIcon Icon="@Icon.Value.ToSvg()" />
+				</MudItem>
+			}
+		</MudGrid>
 	</MudButton>
 </span>
 
@@ -16,6 +29,9 @@
 
 	[Parameter]
 	public string? Label { get; set; }
+
+	[Parameter]
+	public Icon? Icon { get; set; }
 
 	[Parameter]
 	public EventCallback OnClick { get; set; }
@@ -36,7 +52,10 @@
 	public bool Red { get; set; }
 
 	[Parameter]
-	public bool Weak { get; set; }
+	public bool NoBackground { get; set; }
+
+	[Parameter]
+	public bool NoBorder { get; set; }
 
 	[Parameter]
 	public bool Loading { get; set; }
@@ -60,6 +79,11 @@
 
 	private Variant GetButtonVariant()
 	{
-		return Weak ? Variant.Outlined : Variant.Filled;
+		if (NoBorder)
+		{
+			return Variant.Text;
+		}
+
+		return NoBackground ? Variant.Outlined : Variant.Filled;
 	}
 }

@@ -51,7 +51,6 @@
 					<tr>
 						<th>Art</th>
 						<th>Title</th>
-						<th>Album</th>
 						<th>Artists</th>
 					</tr>
 				</thead>
@@ -71,12 +70,18 @@
 									<AoImagePlaceholder />
 								}
 							</td>
-							<td>@item.Title</td>
-							<td>@item.AlbumTitle</td>
+							<td>
+								@if (item.Type == SearchResultType.Track)
+								{
+									<span class="track">@item.Title</span>
+								}
+
+								<span class="album">@item.AlbumTitle</span>
+							</td>
 							<td>
 								@if (item.ArtistNames != null)
 								{
-									@string.Join(", ", item.ArtistNames)
+									@string.Join("; ", item.ArtistNames)
 								}
 							</td>
 						</tr>
