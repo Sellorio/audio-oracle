@@ -1,6 +1,6 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -22,7 +22,8 @@ internal class YtDlpService(HttpClient httpClient, IFfmpegService ffmpegService)
 
         try
         {
-            await EnsureLatestYtDlpExecutableAsync();
+            await EnsureYtDlpExecutableAsync();
+            await EnsureDenoExecutableAsync();
 
             if (arguments.Contains("ffmpeg"))
             {
@@ -62,16 +63,31 @@ internal class YtDlpService(HttpClient httpClient, IFfmpegService ffmpegService)
         return Result.Success();
     }
 
-    private async Task EnsureLatestYtDlpExecutableAsync()
+    private async Task EnsureYtDlpExecutableAsync()
     {
         if (File.Exists(ExePath))
         {
             return;
         }
 
+        using var downloadStream = await httpClient.GetStreamAsync("https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux");
         using var fileStream = new FileStream(ExePath, FileMode.Create, FileAccess.Write);
-        var downloadStream = await httpClient.GetStreamAsync("https://github.com/yt-dlp/yt-dlp/releases/download/2025.09.23/yt-dlp_linux");
         await downloadStream.CopyToAsync(fileStream);
         await Process.Start("chmod", $"+x {ExePath}")!.WaitForExitAsync();
+    }
+
+    private async Task EnsureDenoExecutableAsync()
+    {
+        if (File.Exists(Constants.DenoPath))
+        {
+            return;
+        }
+
+        using var downloadStream = await httpClient.GetStreamAsync("https://github.com/denoland/deno/releases/latest/download/deno-x86_64-unknown-linux-gnu.zip");
+        using var archive = new ZipArchive(downloadStream);
+        using var fileStream = new FileStream(Constants.DenoPath, FileMode.Create, FileAccess.Write);
+        using var entryStream = archive.GetEntry("deno")!.Open();
+        await entryStream.CopyToAsync(fileStream);
+        await Process.Start("chmod", $"+x {Constants.DenoPath}")!.WaitForExitAsync();
     }
 }

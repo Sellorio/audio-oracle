@@ -22,7 +22,7 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
     public async Task<ValueResult<IList<Album>>> GetAlbumsAsync(AlbumFields fields = AlbumFields.None)
     {
         var query = WithFields(databaseContext.Albums, fields);
-        var data = await query.AsNoTracking().ToArrayAsync();
+        var data = await query.AsNoTracking().OrderBy(x => x.Title).ToArrayAsync();
         return data.Select(mapper.Map).ToArray();
     }
 

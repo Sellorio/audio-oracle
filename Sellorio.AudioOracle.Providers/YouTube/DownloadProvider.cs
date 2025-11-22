@@ -38,7 +38,7 @@ internal partial class DownloadProvider(ITrackIdsResolver trackIdsResolver, IYtD
 
         var result =
             await ytDlpService.InvokeYtDlpAsync(
-                $"--cookies {Constants.CookiesPath} --ffmpeg-location {Constants.FfmpegPath} \"https://music.youtube.com/watch?v={trackIds.SourceId}\"",
+                $"--cookies {Constants.CookiesPath} --ffmpeg-location {Constants.FfmpegPath} --js-runtimes deno:{Constants.DenoPath} \"https://music.youtube.com/watch?v={trackIds.SourceId}\"",
                 tempOutputDir);
 
         if (!result.WasSuccess)
