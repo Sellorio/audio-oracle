@@ -99,7 +99,7 @@ internal class SoundCloudApiService(HttpClient httpClient, IFfmpegService ffmpeg
             var transcodeInfo = await httpClient.GetFromJsonAsync<TranscodeInfoDto>(bestTranscode.Url + "?client_id=" + clientId, _jsonOptions);
             var downloadUrl = transcodeInfo!.Url;
 
-            return await ffmpegService.DownloadMediaStreamAsync(downloadUrl, outputFilename, outputBitrateKbps: 256, loudnessNormalization: true, reEncodeToMp3: bestTranscode.Format.Protocol == "hls");
+            return await ffmpegService.DownloadMediaStreamAsync(downloadUrl, outputFilename, outputBitrateKbps: 256, reEncodeToMp3: bestTranscode.Format.Protocol == "hls");
         }
         //if (bestTranscode.Format.Protocol == "hls")
         //{
@@ -123,7 +123,7 @@ internal class SoundCloudApiService(HttpClient httpClient, IFfmpegService ffmpeg
     //    var transcodeInfo = await httpClient.GetFromJsonAsync<TranscodeInfoDto>(transcodeUrl + "?client_id=" + clientId, _jsonOptions);
     //    var downloadUrl = transcodeInfo!.Url;
 
-    //    return await ffmpegService.DownloadMediaStreamAsync(downloadUrl, outputFilename, outputBitrateKbps: 256, loudnessNormalization: true);
+    //    return await ffmpegService.DownloadMediaStreamAsync(downloadUrl, outputFilename, outputBitrateKbps: 256);
     //}
 
     //private async Task DownloadTrackUsingProgressiveAsync(string transcodeUrl, string outputFilename)

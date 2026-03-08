@@ -49,7 +49,7 @@ internal partial class DownloadProvider(ITrackIdsResolver trackIdsResolver, IYtD
 
         var mediaFilename = Directory.GetFiles(tempOutputDir).Single();
 
-        result = await ffmpegService.ConvertToMp3Async(mediaFilename, outputFilename, outputBitrateKbps: 256, loudnessNormalization: true);
+        result = await ffmpegService.ConvertToMp3Async(mediaFilename, outputFilename, outputBitrateKbps: 256);
         Directory.Delete(tempOutputDir, true);
         return result;
     }

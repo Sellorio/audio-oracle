@@ -13,7 +13,7 @@ internal class FfmpegService : IFfmpegService
 {
     private static readonly SemaphoreSlim semaphore = new(1);
 
-    public async Task<Result> ConvertToMp3Async(string source, string destination, int outputBitrateKbps, bool loudnessNormalization)
+    public async Task<Result> ConvertToMp3Async(string source, string destination, int outputBitrateKbps)
     {
         await EnsureFfmpegExecutableAsync();
 
@@ -25,11 +25,10 @@ internal class FfmpegService : IFfmpegService
         }
 
         // According to ChatGPT loudnorm should be -14 and TP should be -1 but for my test track these numbers felt more accurate
-        var filters = loudnessNormalization ? "-af \"loudnorm=I=-12:TP=0:LRA=11\"" : "";
         var tagsFormat = "-id3v2_version 3 -write_id3v1 1";
         var bitrate = $"-ab {outputBitrateKbps}k";
 
-        var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{source}\" {filters} {tagsFormat} {bitrate} \"{destination}\"")
+        var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{source}\" {tagsFormat} {bitrate} \"{destination}\"")
         {
             RedirectStandardError = true,
             UseShellExecute = false,
@@ -51,7 +50,7 @@ internal class FfmpegService : IFfmpegService
         return Result.Success();
     }
 
-    public async Task<Result> DownloadMediaStreamAsync(string sourceUrl, string destination, int outputBitrateKbps, bool loudnessNormalization, bool reEncodeToMp3)
+    public async Task<Result> DownloadMediaStreamAsync(string sourceUrl, string destination, int outputBitrateKbps, bool reEncodeToMp3)
     {
         await EnsureFfmpegExecutableAsync();
 
@@ -62,12 +61,11 @@ internal class FfmpegService : IFfmpegService
             Directory.CreateDirectory(destinationDirectory);
         }
 
-        var filters = loudnessNormalization ? "-af \"loudnorm=I=-12:TP=0:LRA=11\"" : "";
         var tagsFormat = "-id3v2_version 3 -write_id3v1 1";
         var bitrate = $"-ab {outputBitrateKbps}k";
         var encodeAsMp3 = reEncodeToMp3 ? $"-c:a libmp3lame" : "-c copy";
 
-        var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{sourceUrl}\" {encodeAsMp3} {filters} {tagsFormat} {bitrate} \"{destination}\"")
+        var startInfo = new ProcessStartInfo(Constants.FfmpegPath, $"-y -i \"{sourceUrl}\" {encodeAsMp3} {tagsFormat} {bitrate} \"{destination}\"")
         {
             RedirectStandardError = true,
             UseShellExecute = false,
