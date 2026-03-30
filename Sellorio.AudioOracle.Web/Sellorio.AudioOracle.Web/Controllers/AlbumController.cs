@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
@@ -22,6 +23,12 @@ public class AlbumController(IAlbumService albumService, IAlbumCreationService a
     public async Task<IActionResult> ListAsync(AlbumFields include = AlbumFields.None)
     {
         return await albumService.GetAlbumsAsync(include).ToActionResult();
+    }
+
+    [HttpGet("page")]
+    public async Task<IActionResult> PageAsync(int pageNumber, int pageSize, bool onlyAlbumsRequiringAttention = false, AlbumFields include = AlbumFields.None)
+    {
+        return await albumService.GetAlbumPageAsync(pageNumber, pageSize, onlyAlbumsRequiringAttention, include).ToActionResult();
     }
 
     [HttpGet("{id:int}")]

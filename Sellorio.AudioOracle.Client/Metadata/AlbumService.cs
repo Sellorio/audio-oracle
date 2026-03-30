@@ -1,5 +1,6 @@
 ﻿using Sellorio.AudioOracle.Client.Internal;
 using Sellorio.AudioOracle.Library.Results;
+using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
@@ -24,6 +25,11 @@ internal class AlbumService(IRestClient restClient) : IAlbumService
     public async Task<ValueResult<IList<Album>>> GetAlbumsAsync(AlbumFields fields = AlbumFields.None)
     {
         return await restClient.Get($"/albums{new { include = fields }}").ToValueResult<IList<Album>>();
+    }
+
+    public async Task<ValueResult<PageResult<Album>>> GetAlbumPageAsync(int pageNumber, int pageSize, bool onlyAlbumsRequiringAttention = false, AlbumFields fields = AlbumFields.None)
+    {
+        return await restClient.Get($"/albums/page{new { pageNumber, pageSize, onlyAlbumsRequiringAttention, include = fields }}").ToValueResult<PageResult<Album>>();
     }
 
     public async Task<ValueResult<Album>> UpdateAlbumArtAsync(int id, FileType imageType, Stream stream)

@@ -1,22 +1,32 @@
 ﻿@page "/albums"
+@using Sellorio.AudioOracle.Models
 @using Sellorio.AudioOracle.Library.Results.Messages
 @using Sellorio.AudioOracle.Models.Metadata
 @using Sellorio.AudioOracle.ServiceInterfaces.Metadata
 @inject IAlbumService AlbumService
 
-<PageLoadWrapper Result="albumsResult">
-	@if (albumsResult!.Value.Count == 0)
-	{
-		<AoInformation Message="There are no albums. Navigate to Add Album to start adding some!" />
-	}
-	else
-	{
-		<AoPanel>
-			<AoCheckbox Label="Only albums requiring attention" Value="onlyAlbumsRequiringAttention" ValueChanged="OnlyAlbumsRequiringAttentionChanged" />
-		</AoPanel>
+<AoPanel>
+	<AoCheckbox Label="Only albums requiring attention" Value="onlyAlbumsRequiringAttention" ValueChanged="OnlyAlbumsRequiringAttentionChangedAsync" />
+</AoPanel>
 
+<AoInfiniteScroll TItem="Album"
+				  @ref="infiniteScroll"
+				  PageSize="24"
+				  ShowBackToTopButton
+				  LoadPageAsync="LoadAlbumsAsync">
+	<EmptyContent>
+		@if (onlyAlbumsRequiringAttention)
+		{
+			<AoInformation Message="There are no albums requiring attention." />
+		}
+		else
+		{
+			<AoInformation Message="There are no albums. Navigate to Add Album to start adding some!" />
+		}
+	</EmptyContent>
+	<PageContent Context="albums">
 		<AoTiles>
-			@foreach (var album in albumsToShow!)
+			@foreach (var album in albums)
 			{
 				var trackStatusSummary = GetTrackStatusSummary(album);
 
@@ -57,24 +67,12 @@
 				</AoVerticalTile>
 			}
 		</AoTiles>
-	}
-</PageLoadWrapper>
+	</PageContent>
+</AoInfiniteScroll>
 
 @code {
-	ValueResult<IList<Album>>? albumsResult;
-	IList<Album>? albumsToShow;
+    AoInfiniteScroll<Album>? infiniteScroll;
 	bool onlyAlbumsRequiringAttention;
-
-	protected override async Task OnInitializedAsync()
-	{
-		albumsResult = await AlbumService.GetAlbumsAsync(AlbumFields.Tracks | AlbumFields.Artists);
-		albumsToShow = albumsResult.WasSuccess ? albumsResult.Value : [];
-	}
-
-	Task AlbumClickedAsync()
-	{
-		return Task.CompletedTask;
-	}
 
 	(byte Failed, byte MissingSource, byte InProgress, byte NotRequested, byte Imported) GetTrackStatusSummary(Album album)
 	{
@@ -111,17 +109,22 @@
 		return (failed, missingSource, inProgress, notRequested, imported);
 	}
 
-	void OnlyAlbumsRequiringAttentionChanged(bool newValue)
+ Task<ValueResult<PageResult<Album>>> LoadAlbumsAsync(int pageNumber, int pageSize)
+	{
+        return AlbumService.GetAlbumPageAsync(
+			pageNumber,
+			pageSize,
+			onlyAlbumsRequiringAttention,
+			AlbumFields.Tracks | AlbumFields.Artists);
+	}
+
+	async Task OnlyAlbumsRequiringAttentionChangedAsync(bool newValue)
 	{
 		onlyAlbumsRequiringAttention = newValue;
-		
-		albumsToShow =
-			onlyAlbumsRequiringAttention
-				? albumsResult!.Value
-					.Where(x =>
-						x.Tracks.Any(y =>
-							y.Status is TrackStatus.MetadataRetrievalFailed or TrackStatus.DownloadFailed or TrackStatus.MissingDownloadSource))
-					.ToArray()
-				: albumsResult!.Value;
+
+		if (infiniteScroll != null)
+		{
+			await infiniteScroll.ResetAsync();
+		}
 	}
 }

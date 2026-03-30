@@ -4,6 +4,7 @@ using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Data.Metadata;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
+using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
@@ -19,6 +20,48 @@ namespace Sellorio.AudioOracle.Services.Metadata;
 
 internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper, IFileService fileService, IRefreshTrackTagsTaskQueuingService refreshTrackTagsTaskQueuingService) : IAlbumService
 {
+    public async Task<ValueResult<PageResult<Album>>> GetAlbumPageAsync(int pageNumber, int pageSize, bool onlyAlbumsRequiringAttention = false, AlbumFields fields = AlbumFields.None)
+    {
+        if (pageNumber < 1)
+        {
+            return ResultMessage.Error("Page number must be at least 1.");
+        }
+
+        if (pageSize < 1)
+        {
+            return ResultMessage.Error("Page size must be at least 1.");
+        }
+
+        var query = databaseContext.Albums.AsQueryable();
+
+        if (onlyAlbumsRequiringAttention)
+        {
+            query = query.Where(x =>
+                x.Tracks!.Any(y =>
+                    y.Status == TrackStatus.MetadataRetrievalFailed ||
+                    y.Status == TrackStatus.DownloadFailed ||
+                    y.Status == TrackStatus.MissingDownloadSource));
+        }
+
+        var totalCount = await query.CountAsync();
+        var data =
+            await WithFields(
+                    query
+                        .OrderBy(x => x.Title)
+                        .ThenBy(x => x.Id)
+                        .Skip((pageNumber - 1) * pageSize)
+                        .Take(pageSize),
+                    fields)
+                .AsNoTracking()
+                .ToArrayAsync();
+
+        return new PageResult<Album>
+        {
+            Items = data.Select(mapper.Map).ToArray(),
+            TotalCount = totalCount
+        };
+    }
+
     public async Task<ValueResult<IList<Album>>> GetAlbumsAsync(AlbumFields fields = AlbumFields.None)
     {
         var query = WithFields(databaseContext.Albums, fields);
