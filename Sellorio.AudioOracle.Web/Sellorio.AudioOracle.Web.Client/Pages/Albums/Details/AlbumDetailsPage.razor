@@ -5,10 +5,12 @@
 @using Sellorio.AudioOracle.ServiceInterfaces.Metadata
 @using Sellorio.AudioOracle.Web.Client.Library.Providers.DisableState
 @using System.IO
+@implements IDisposable
 @inject NavigationManager NavigationManager
 @inject IAlbumService AlbumService
 @inject ITrackService TrackService
 @inject IResultPopupService ResultPopupService
+@inject ITrackEvents TrackEvents
 
 <PageLoadWrapper Result="albumResult">
 	<AoBoxLoader Loading="isLoading">
@@ -96,9 +98,16 @@
 
 	protected override async Task OnInitializedAsync()
 	{
+		TrackEvents.TrackUpdated += TrackUpdated;
+
 		isLoading = true;
 		albumResult = await AlbumService.GetAlbumAsync(Id, AlbumFields.Artists | AlbumFields.Tracks);
 		isLoading = false;
+	}
+
+	public void Dispose()
+	{
+		TrackEvents.TrackUpdated -= TrackUpdated;
 	}
 
 	private async Task RetryAllAsync()
@@ -163,6 +172,22 @@
 		else
 		{
 			await ResultPopupService.ShowResultAsPopupAsync(result, null);
+		}
+	}
+
+	private async Task TrackUpdated(Track track)
+	{
+		if (track.AlbumId == Id && albumResult is not null)
+		{
+			for (var i = 0; i < albumResult.Value.Tracks.Count; i++)
+			{
+				if (track.Id == albumResult.Value.Tracks[i].Id)
+				{
+					albumResult.Value.Tracks[i] = track;
+					_ = InvokeAsync(StateHasChanged);
+					break;
+                }
+			}
 		}
 	}
 }

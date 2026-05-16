@@ -7,9 +7,9 @@
                FilesChanged="ValueChanged"
                Disabled="DisableContent"
                Style="@(Hidden ? "display:none" : "")">
-    <ActivatorContent>
+    <CustomContent>
         <AoButton Primary Label="@(Value == null ? "Select File" : Value.Name)" />
-    </ActivatorContent>
+    </CustomContent>
 </MudFileUpload>
 
 @code {

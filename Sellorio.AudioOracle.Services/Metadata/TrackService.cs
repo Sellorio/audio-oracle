@@ -1,13 +1,14 @@
-﻿using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Library.Results.Messages;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
+using Sellorio.AudioOracle.Services.Events;
 using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
@@ -15,7 +16,8 @@ internal class TrackService(
     DatabaseContext databaseContext,
     ITrackMetadataTaskQueuingService trackMetadataTaskQueuingService,
     IDownloadTrackTaskQueuingService downloadTrackTaskQueuingService,
-    IMetadataMapper metadataMapper) : ITrackService
+    IMetadataMapper metadataMapper,
+    IEventService eventService) : ITrackService
 {
     public async Task<Result> RetryAllTracksAsync(int albumId)
     {
@@ -59,6 +61,8 @@ internal class TrackService(
             {
                 continue;
             }
+
+            await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), metadataMapper.Map(track));
         }
 
         return Result.Success();
@@ -110,7 +114,11 @@ internal class TrackService(
 
         await databaseContext.SaveChangesAsync();
 
-        return metadataMapper.Map(data);
+        var model = metadataMapper.Map(data);
+
+        await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), model);
+
+        return model;
     }
 
     public async Task<ValueResult<Track>> RequestTrackAsync(int albumId, int trackId)
@@ -169,7 +177,11 @@ internal class TrackService(
             await downloadTrackTaskQueuingService.QueueAsync(trackId);
         }
 
-        return metadataMapper.Map(data);
+        var model = metadataMapper.Map(data);
+
+        await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), model);
+
+        return model;
     }
 
     public async Task<ValueResult<Track>> ChangeDownloadSourceAsync(int albumId, int trackId, DownloadSource downloadSource, bool redownloadTrack)
@@ -222,7 +234,11 @@ internal class TrackService(
             await downloadTrackTaskQueuingService.QueueAsync(trackId);
         }
 
-        return metadataMapper.Map(data);
+        var model = metadataMapper.Map(data);
+
+        await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), model);
+
+        return model;
     }
 
     public async Task<ValueResult<Track>> DeleteTrackMediaAsync(int albumId, int trackId)
@@ -255,6 +271,10 @@ internal class TrackService(
             File.Delete(data.Filename);
         }
 
-        return metadataMapper.Map(data);
+        var model = metadataMapper.Map(data);
+
+        await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), model);
+
+        return model;
     }
 }

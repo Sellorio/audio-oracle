@@ -9,7 +9,7 @@ New-Item "$publishDir/AudioOracleCompanion" -ItemType Directory
 
 dotnet publish "$PSScriptRoot/Tools/AudioOracleCompanion/AudioOracleCompanion.csproj" `
 	--configuration Release `
-	--framework 'net9.0-windows' `
+	--framework 'net10.0-windows' `
 	--runtime 'win-x64' `
 	--self-contained true `
 	--output "$publishDir/AudioOracleCompanion"

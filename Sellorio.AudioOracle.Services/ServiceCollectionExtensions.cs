@@ -81,11 +81,16 @@ public static class ServiceCollectionExtensions
                 .AddScoped<ITrackMetadataTaskQueuingService, TrackMetadataTaskQueuingService>()
                 .AddScoped<IDownloadTrackTaskQueuingService, DownloadTrackTaskQueuingService>()
                 .AddScoped<IRefreshTrackTagsTaskQueuingService, RefreshTrackTagsTaskQueuingService>()
+            
+            // Events
+            .AddSingleton<IAlbumEvents, AlbumEvents>()
+            .AddSingleton<ITrackEvents, TrackEvents>()
             ;
 
         ServiceRegistrationHelper.EnsureAllServicesAreRegistered(
             services,
-            [typeof(ISessionService).Assembly, typeof(ServiceCollectionExtensions).Assembly]);
+            [typeof(ISessionService).Assembly, typeof(ServiceCollectionExtensions).Assembly],
+            typesToExclude: [typeof(IAlbumEvents), typeof(ITrackEvents)]);
 
         return services;
     }

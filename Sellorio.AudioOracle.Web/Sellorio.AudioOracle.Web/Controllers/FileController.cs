@@ -24,7 +24,7 @@ public class FileController(IFileService fileService, IDataFileService dataFileS
         if (fileResult.WasSuccess)
         {
             var mimeType = fileResult.Value.MimeType;
-            return File(fileResult.Value.Content.Data, mimeType);
+            return File(fileResult.Value.Content!.Data, mimeType);
         }
         else if (fileResult.Messages.Any(x => x.Severity == Library.Results.Messages.ResultMessageSeverity.NotFound))
         {
@@ -51,7 +51,7 @@ public class FileController(IFileService fileService, IDataFileService dataFileS
         return
             File(
                 await response.Content.ReadAsStreamAsync(),
-                response.Content.Headers.ContentType.MediaType);
+                response.Content.Headers.ContentType!.MediaType!);
     }
 
     [HttpGet("mf/{trackId:int}")] // mf = Media File - the media file for a track by track id
@@ -81,7 +81,7 @@ public class FileController(IFileService fileService, IDataFileService dataFileS
         return await dataFileService.PostDataFileAsync(fileName, file.Length, stream).ToActionResult();
     }
 
-    private string RemoveNonAscii(string input)
+    private static string RemoveNonAscii(string input)
     {
         var sb = new System.Text.StringBuilder();
         foreach (var c in input)

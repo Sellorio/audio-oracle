@@ -21,9 +21,11 @@ internal class MetadataSearchProvider(IPageService pageService, IBrowseService b
         var pageDatas = await pageService.GetPageInitialDataAsync("https://music.youtube.com/search?q=" + WebUtility.UrlEncode(searchText));
         var pageData = pageDatas[1];
 
-        var resultsContainer = pageData["contents"]!["tabbedSearchResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["sectionListRenderer"]!["contents"]!;
+        var mainSection = pageData["contents"]!["tabbedSearchResultsRenderer"]!["tabs"]![0]!["tabRenderer"]!["content"]!["sectionListRenderer"]!;
+        var resultsContainer = mainSection["contents"]!;
+        //var resultTabNames = mainSection["header"]!["chipCloudRenderer"]!["chips"]!.Select(x => x["chipCloudChipRenderer"]!["text"]!["runs"]![0]!.Get<string>("text")).ToList();
         var mainResult = resultsContainer[0]!["musicCardShelfRenderer"]!;
-        var otherResults = resultsContainer[1]!["musicShelfRenderer"]!;
+        var otherResults = resultsContainer.Select(x => x["itemSectionRenderer"]?["contents"]?[0]!["musicResponsiveListItemRenderer"]).Where(x => x != null).ToList();
 
         var resultItems = new List<MetadataSearchResult>(20);
 
@@ -34,9 +36,9 @@ internal class MetadataSearchProvider(IPageService pageService, IBrowseService b
             resultItems.Add(mainResultItem);
         }
 
-        foreach (var otherResult in otherResults["contents"]!.AsEnumerable())
+        foreach (var otherResult in otherResults)
         {
-            var otherResultItem = await ConvertResultAsync(otherResult!["musicResponsiveListItemRenderer"]!, isCard: false);
+            var otherResultItem = await ConvertResultAsync(otherResult!, isCard: false);
 
             if (otherResultItem != null)
             {

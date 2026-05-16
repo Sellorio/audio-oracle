@@ -16,7 +16,7 @@ internal class AuthorizeFilter(ISessionService sessonService) : IAsyncActionFilt
         }
 
         var authorizationValue = context.HttpContext.Request.Headers.Authorization[0];
-        var authorizationValueParts = authorizationValue.Split(' ');
+        var authorizationValueParts = authorizationValue!.Split(' ');
 
         var scheme = authorizationValueParts[0];
         var sessionToken = authorizationValueParts[1];

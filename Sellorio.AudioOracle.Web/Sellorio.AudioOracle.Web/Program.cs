@@ -10,6 +10,8 @@ using Sellorio.AudioOracle.Client.Sessions;
 using Sellorio.AudioOracle.Data;
 using Sellorio.AudioOracle.Models;
 using Sellorio.AudioOracle.Services;
+using Sellorio.AudioOracle.Services.Events;
+using Sellorio.AudioOracle.Web.Events;
 using Sellorio.AudioOracle.Web.Client.Library;
 using Sellorio.AudioOracle.Web.Client.Services;
 using Sellorio.AudioOracle.Web.Components;
@@ -37,6 +39,13 @@ builder.Services
 
 builder.Services
     .AddControllers().AddJsonOptions(o => o.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services
+    .AddSignalR()
+    .AddJsonProtocol(o => o.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddSingleton<EventSubscriptionStore>();
+builder.Services.AddSingleton<IEventService, SignalREventService>();
 
 builder.Services
     .AddScoped<AuthorizeFilter>()
@@ -70,6 +79,7 @@ app.UseAntiforgery();
 
 app.MapStaticAssets();
 app.MapControllers();
+app.MapHub<AudioOracleEventsHub>("/hubs/events");
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode()
     .AddInteractiveWebAssemblyRenderMode()

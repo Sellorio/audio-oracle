@@ -9,6 +9,7 @@ using Sellorio.AudioOracle.Models.Content;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.Events;
 using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
 using System;
 using System.Collections.Generic;
@@ -18,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
 
-internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper, IFileService fileService, IRefreshTrackTagsTaskQueuingService refreshTrackTagsTaskQueuingService) : IAlbumService
+internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumService> logger, IMetadataMapper mapper, IFileService fileService, IRefreshTrackTagsTaskQueuingService refreshTrackTagsTaskQueuingService, IEventService eventService) : IAlbumService
 {
     public async Task<ValueResult<PageResult<Album>>> GetAlbumPageAsync(int pageNumber, int pageSize, bool onlyAlbumsRequiringAttention = false, AlbumFields fields = AlbumFields.None)
     {
@@ -86,7 +87,8 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
 
     public async Task<Result> DeleteAlbumAsync(int id, bool deleteFiles = true)
     {
-        return await databaseContext.WithTransaction(async transaction =>
+        Album? deletedAlbum = null;
+        var result = await databaseContext.WithTransaction(async transaction =>
         {
             var query = WithFields(databaseContext.Albums, AlbumFields.Tracks | AlbumFields.Artists);
             var data = await query.SingleOrDefaultAsync(x => x.Id == id);
@@ -95,6 +97,8 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
             {
                 return ResultMessage.NotFound("Album");
             }
+
+            deletedAlbum = mapper.Map(data);
 
             databaseContext.Albums.Remove(data);
             databaseContext.AlbumArtists.RemoveRange(data.Artists!);
@@ -118,6 +122,13 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
 
             return Result.Success();
         });
+
+        if (result.WasSuccess && deletedAlbum != null)
+        {
+            await eventService.SendEvent<IAlbumEvents, Album>(nameof(IAlbumEvents.AlbumDeleted), deletedAlbum);
+        }
+
+        return result;
     }
 
     public async Task<ValueResult<Album>> UpdateAlbumArtAsync(int id, FileType imageType, Stream stream)
@@ -161,6 +172,8 @@ internal class AlbumService(DatabaseContext databaseContext, ILogger<AlbumServic
             {
                 await refreshTrackTagsTaskQueuingService.QueueAsync(track.Id);
             }
+
+            await eventService.SendEvent<IAlbumEvents, Album>(nameof(IAlbumEvents.AlbumUpdated), result.Value);
         }
 
         return result;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -14,6 +15,7 @@ using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
 using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.Events;
 using Sellorio.AudioOracle.Services.TaskQueue.Queuers;
 
 namespace Sellorio.AudioOracle.Services.Metadata;
@@ -24,7 +26,8 @@ internal class AlbumCreationService(
     IProviderInvocationService providerInvocationService,
     IFileService fileService,
     IArtistCreationService artistCreationService,
-    ITrackMetadataTaskQueuingService trackMetadataTaskQueuingService) : IAlbumCreationService
+    ITrackMetadataTaskQueuingService trackMetadataTaskQueuingService,
+    IEventService eventService) : IAlbumCreationService
 {
     public async Task<ValueResult<Album>> CreateAlbumAsync(AlbumPost albumPost)
     {
@@ -103,6 +106,8 @@ internal class AlbumCreationService(
             {
                 await trackMetadataTaskQueuingService.QueueAsync(track.Id);
             }
+
+            await eventService.SendEvent<IAlbumEvents, Album>(nameof(IAlbumEvents.AlbumCreated), result.Value);
         }
 
         return result;
