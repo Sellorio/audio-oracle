@@ -3,7 +3,7 @@
 
 <MudMenu Dense Disabled="DisableContent || Loading">
 	<ActivatorContent>
-		<AoButton Icon="Icon.Menu" Primary Loading="Loading" />
+		<AoButton Icon="Icon.Menu" Primary Loading="Loading" OnClick="() => context.ToggleAsync()" />
 	</ActivatorContent>
 	<ChildContent>
 		<AoDisableStateProvider>

@@ -10,7 +10,9 @@ using Sellorio.AudioOracle.Library.Results;
 using Sellorio.AudioOracle.Models.Metadata;
 using Sellorio.AudioOracle.Providers;
 using Sellorio.AudioOracle.Providers.Models;
+using Sellorio.AudioOracle.ServiceInterfaces.Metadata;
 using Sellorio.AudioOracle.Services.Content;
+using Sellorio.AudioOracle.Services.Events;
 using Sellorio.AudioOracle.Services.Import;
 using Sellorio.AudioOracle.Services.Metadata;
 
@@ -22,7 +24,8 @@ internal class DownloadTrack(
     IProviderInvocationService providerInvocationService,
     IFileTagsService fileTagsService,
     IMetadataMapper metadataMapper,
-    IImportService importService) : ITaskHandler
+    IImportService importService,
+    IEventService eventService) : ITaskHandler
 {
     public async Task HandleAsync(TaskHandlerContext context)
     {
@@ -99,6 +102,7 @@ internal class DownloadTrack(
                     }
                 }
 
+                await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), metadataMapper.Map(trackData));
                 return;
             }
         }
@@ -122,6 +126,7 @@ internal class DownloadTrack(
                 }
             }
 
+            await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), metadataMapper.Map(trackData));
             return;
         }
 
@@ -139,6 +144,8 @@ internal class DownloadTrack(
         trackData.Status = TrackStatus.Imported;
         trackData.StatusText = null;
         await databaseContext.SaveChangesAsync();
+
+        await eventService.SendEvent<ITrackEvents, Track>(nameof(ITrackEvents.TrackUpdated), metadataMapper.Map(trackData));
     }
 
     private static string EscapePathItem(string value)

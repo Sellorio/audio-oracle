@@ -1,4 +1,5 @@
 ﻿@page "/settings"
+@using MudBlazor
 @using Sellorio.AudioOracle.Library.Results.Messages
 @using Sellorio.AudioOracle.ServiceInterfaces.Content
 @inject IDataFileService FileService
@@ -13,6 +14,12 @@
             </AoFormButtons>
         </AoForm>
     </AoBoxLoader>
+</AoPanel>
+
+<AoPanel Title="System Info">
+    <AoForm Disabled>
+        <AoTextField Label="Version" Value="@typeof(SettingsPage).Assembly.GetName().Version!.ToString()" />
+    </AoForm>
 </AoPanel>
 
 @code {
